@@ -455,7 +455,7 @@ describe("__eq", function()
     end)
 
     it("Vectors are equal to themselves.", function()
-        assert.are.equals(base_vector);
+        assert.are.equals(base_vector, base_vector);
     end);
 
     it("Vectors with equal elements and in the same order are equal", function()
