@@ -50,7 +50,9 @@ impl LuaVectorFacade {
         this: &Self,
         (index,): (LuaInteger,),
     ) -> LuaResult<(LuaValue, LuaValue)> {
-        Ok(match this.vec.get(index) {
+        let rust_index = Self::translate_index(index)?;
+
+        Ok(match this.vec.get(rust_index) {
             Some(value) => (LuaValue::Boolean(true), value),
             None => (LuaValue::Boolean(false), LuaNil),
         })
@@ -86,7 +88,9 @@ impl LuaVectorFacade {
         this: &mut Self,
         (index, new_value): (LuaInteger, LuaValue),
     ) -> LuaResult<LuaValue> {
-        let succeed = this.vec.set(index, new_value);
+        let rust_index = Self::translate_index(index)?;
+
+        let succeed = this.vec.set(rust_index, new_value);
 
         Ok(LuaValue::Boolean(succeed))
     }
@@ -113,14 +117,11 @@ impl LuaVectorFacade {
     /// It retrieves an element by index using the `[]` operator. Unlike the explicit `get`
     /// method, this metamethod causes a Lua runtime error if the index is out of bounds.
     pub(super) fn index(_: &Lua, this: &Self, (index,): (LuaInteger,)) -> LuaResult<LuaValue> {
-        match this.vec.get(index) {
-            Some(value) => Ok(value),
+        let rust_index = Self::translate_index(index)?;
 
-            None => {
-                let msg = format!("Index out of bounds {}", index);
-                let lua_err = LuaError::runtime(msg);
-                Err(lua_err)
-            }
+        match this.vec.get(rust_index) {
+            Some(value) => Ok(value),
+            None => Self::out_of_bound_error(rust_index),
         }
     }
 
@@ -162,12 +163,29 @@ impl LuaVectorFacade {
         this: &mut Self,
         (index, value): (LuaInteger, LuaValue),
     ) -> LuaResult<()> {
-        if !this.vec.set(index, value) {
-            let msg = format!("Index out of bounds {}", index);
-            let lua_err = LuaError::runtime(msg);
-            Err(lua_err)
+        let rust_index = Self::translate_index(index)?;
+
+        if !this.vec.set(rust_index, value) {
+            Self::out_of_bound_error(rust_index)
         } else {
             Ok(())
         }
+    }
+
+    fn translate_index(index: LuaInteger) -> LuaResult<LuaInteger> {
+        match index {
+            0 => Err(LuaError::RuntimeError(
+                "0 is not a valid index for Vector".to_owned(),
+            )),
+            idx if idx > 0 => Ok(index - 1),
+            idx => Ok(idx),
+        }
+    }
+
+    fn out_of_bound_error<T>(index: LuaInteger) -> LuaResult<T> {
+        let msg = format!("Index out of bounds {}", index);
+        let lua_err = LuaError::runtime(msg);
+
+        Err(lua_err)
     }
 }

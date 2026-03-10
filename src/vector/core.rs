@@ -33,13 +33,14 @@ impl LuaVector {
         Self { inner: values }
     }
 
-    /// Retrieves a value from the vector based on a Lua 1-based index.
+    /// Retrieves a value from the vector.
     ///
     /// This method supports positive and negative indexing. A positive index `i`
     /// retrieves the element at that position, while a negative index `-j` retrieves
     /// the element `j` from the end of the vector.
     pub(crate) fn get(&self, index: LuaInteger) -> Option<LuaValue> {
-        self.zero_based_index(index).map(|idx| self.inner[idx].clone())
+        self.resolve_index(index)
+            .map(|idx| self.inner[idx].clone())
     }
 
     /// Returns the number of elements in the vector.
@@ -66,12 +67,12 @@ impl LuaVector {
         self.inner.pop()
     }
 
-    /// Sets the value at a given Lua index.
+    /// Sets the value at a given index.
     ///
     /// Returns `true` on success, `false` if the index is out of bounds.
     /// This method supports both positive and negative indexing.
     pub(crate) fn set(&mut self, index: LuaInteger, new_value: LuaValue) -> bool {
-        match self.zero_based_index(index) {
+        match self.resolve_index(index) {
             Some(idx) => {
                 self.inner[idx] = new_value;
                 true
@@ -88,21 +89,14 @@ impl LuaVector {
         std::ptr::eq(self, other)
     }
 
-    /// A helper function to convert a Lua 1-based index to a Rust 0-based index.
-    ///
-    /// This function also handles negative indices for reverse indexing.
-    /// - Positive `idx` -> `idx - 1`
-    /// - Negative `idx` -> `idx + len`
-    /// - Returns `None` if the index is out of bounds.
-    fn zero_based_index(&self, one_based_index: LuaInteger) -> Option<usize> {
+    fn resolve_index(&self, index: LuaInteger) -> Option<usize> {
         let len = self.inner.len() as LuaInteger;
 
-        match one_based_index {
-            0 => None,
-            idx if idx > len => None,
+        match index {
+            idx if idx >= len => None,
             idx if idx < -len => None,
-            idx if idx > 0 => Some((idx - 1) as usize),
-            idx => Some((idx + len) as usize),
+            idx if idx < 0 => Some((idx + len) as usize),
+            idx => Some((idx) as usize),
         }
     }
 }
