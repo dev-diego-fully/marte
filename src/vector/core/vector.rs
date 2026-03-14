@@ -7,9 +7,9 @@ use mlua::prelude::*;
 /// allowing for reusable logic. The `PartialEq` derive implements a deep
 /// comparison for the `__eq` metamethod.
 #[derive(PartialEq)]
-pub(crate) struct LuaVector {
+pub(in crate::vector) struct LuaVector {
     /// The internal `Vec` that stores the Lua values.
-    inner: Vec<LuaValue>,
+    pub(in crate::vector) inner: Vec<LuaValue>,
 }
 
 impl LuaVector {
@@ -19,7 +19,7 @@ impl LuaVector {
     /// Creates a new `LuaVector` instance with a given size and filler value.
     ///
     /// Returns an `Err` if the size is a negative number.
-    pub(crate) fn new(size: LuaInteger, filler: LuaValue) -> Result<Self, String> {
+    pub(in crate::vector) fn new(size: LuaInteger, filler: LuaValue) -> Result<Self, String> {
         if size < 0 {
             return Err(format!("Invalid Vector len {}.", size));
         }
@@ -29,7 +29,7 @@ impl LuaVector {
     }
 
     /// Creates a new `LuaVector` from a pre-existing Rust `Vec<LuaValue>`.
-    pub(crate) fn of(values: Vec<LuaValue>) -> Self {
+    pub(in crate::vector) fn of(values: Vec<LuaValue>) -> Self {
         Self { inner: values }
     }
 
@@ -38,13 +38,13 @@ impl LuaVector {
     /// This method supports positive and negative indexing. A positive index `i`
     /// retrieves the element at that position, while a negative index `-j` retrieves
     /// the element `j` from the end of the vector.
-    pub(crate) fn get(&self, index: LuaInteger) -> Option<LuaValue> {
+    pub(in crate::vector) fn get(&self, index: LuaInteger) -> Option<LuaValue> {
         self.resolve_index(index)
             .map(|idx| self.inner[idx].clone())
     }
 
     /// Returns the number of elements in the vector.
-    pub(crate) fn len(&self) -> LuaInteger {
+    pub(in crate::vector) fn len(&self) -> LuaInteger {
         self.inner.len() as LuaInteger
     }
 
@@ -52,7 +52,7 @@ impl LuaVector {
     ///
     /// Returns `true` if the push was successful, and `false` if the vector
     /// has reached its maximum capacity.
-    pub(crate) fn push(&mut self, value: LuaValue) -> bool {
+    pub(in crate::vector) fn push(&mut self, value: LuaValue) -> bool {
         if self.inner.len() < Self::MAX_LEN {
             self.inner.push(value);
             return true;
@@ -63,7 +63,7 @@ impl LuaVector {
     /// Removes and returns the last element of the vector.
     ///
     /// Returns `None` if the vector is empty.
-    pub(crate) fn pop(&mut self) -> Option<LuaValue> {
+    pub(in crate::vector) fn pop(&mut self) -> Option<LuaValue> {
         self.inner.pop()
     }
 
@@ -71,7 +71,7 @@ impl LuaVector {
     ///
     /// Returns `true` on success, `false` if the index is out of bounds.
     /// This method supports both positive and negative indexing.
-    pub(crate) fn set(&mut self, index: LuaInteger, new_value: LuaValue) -> bool {
+    pub(in crate::vector) fn set(&mut self, index: LuaInteger, new_value: LuaValue) -> bool {
         match self.resolve_index(index) {
             Some(idx) => {
                 self.inner[idx] = new_value;
@@ -85,7 +85,7 @@ impl LuaVector {
     ///
     /// This method is a helper for the `is_same` Lua method, which performs a reference
     /// comparison.
-    pub(crate) fn is_same(&self, other: &Self) -> bool {
+    pub(in crate::vector) fn is_same(&self, other: &Self) -> bool {
         std::ptr::eq(self, other)
     }
 

@@ -175,6 +175,6 @@ end
 function Vector.sort(self, comparer)
 end
 
-vector = require("vector.core")
+vector = require("marte.vector.core")
 
 return vector

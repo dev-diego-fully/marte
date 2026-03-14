@@ -1,7 +1,6 @@
-
 use mlua::prelude::*;
 
-use crate::vector::facade::LuaVectorFacade;
+use super::translation::LuaVectorFacade;
 
 /// The entry point for the Lua module, exposing the `Vector` type.
 ///
@@ -12,8 +11,8 @@ use crate::vector::facade::LuaVectorFacade;
 fn marte_vector(lua: &Lua) -> LuaResult<LuaTable> {
     let module = lua.create_table()?;
 
-    module.set("new", lua.create_function(LuaVectorFacade::new)?)?;
-    module.set("of", lua.create_function(LuaVectorFacade::of)?)?;
+    module.set("new", lua.create_function(LuaVectorFacade::lua_new)?)?;
+    module.set("of", lua.create_function(LuaVectorFacade::lua_of)?)?;
 
     Ok(module)
 }
@@ -37,5 +36,7 @@ impl LuaUserData for LuaVectorFacade {
         methods.add_meta_method("__eq", Self::equals);
 
         methods.add_meta_method_mut("__newindex", Self::newindex);
+
+        methods.add_method("copy", Self::copy);
     }
 }
