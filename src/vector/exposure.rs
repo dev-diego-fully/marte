@@ -38,5 +38,7 @@ impl LuaUserData for LuaVectorFacade {
         methods.add_meta_method_mut("__newindex", Self::newindex);
 
         methods.add_method("copy", Self::copy);
+
+        methods.add_function("reverse", Self::reverse);
     }
 }
