@@ -34,7 +34,7 @@ describe("copy", function()
 end)
 
 describe("reverse", function()
-    it("Returns the original vector passed as an argument", function()
+    it("Returns the original vector provided as an argument.", function()
         local original_vec = vector.of(1, 2, 3, 4, 5, 6);
         local reversed_vec = original_vec:reverse();
 
@@ -63,4 +63,40 @@ describe("reverse", function()
             "It is failing to sort an odd-sized vector"
         );
     end)
+end)
+
+describe("transform", function()
+    it("Returns the original vector provided as an argument.", function()
+        local original_vec = vector.of(1, 2, 3, 4, 5, 6);
+        local returned_vec = original_vec:transform(function(v) return v end);
+
+        assert.is.truthy(
+            original_vec:is_same(returned_vec),
+            "It is creating a new Vector"
+        );
+    end)
+
+    it("Applies the transformation function to each element in the vector", function()
+        local transformed_vec = vector.of(1, 2, 3, 4, 5, 6);
+        local expected_vec = vector.of(2, 4, 6, 8, 10, 12);
+
+        transformed_vec:transform(function(v) return 2 * v end);
+
+        assert.are.equals(
+            transformed_vec, expected_vec,
+            "The transformation function is not being applied to all elements of the Vector"
+        );
+    end)
+
+    it("Provides Lua indices for the transformation function", function()
+        local transformed_vec = vector.new(5);
+        local expected_vec = vector.of(1, 2, 3, 4, 5);
+        transformed_vec:transform(function(_, i) return i end);
+
+        assert.are.equals(
+            transformed_vec, expected_vec,
+            "It is not correctly providing Lua vectors to the transformation function"
+        )
+    end)
+
 end)

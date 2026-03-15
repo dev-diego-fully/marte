@@ -40,5 +40,6 @@ impl LuaUserData for LuaVectorFacade {
         methods.add_method("copy", Self::copy);
 
         methods.add_function("reverse", Self::reverse);
+        methods.add_function("transform", Self::transform);
     }
 }
