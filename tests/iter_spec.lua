@@ -98,5 +98,53 @@ describe("transform", function()
             "It is not correctly providing Lua vectors to the transformation function"
         )
     end)
+end)
 
+describe("keep", function()
+    it("Returns the original vector passed as an argument", function()
+        local original_vec = vector.of(1, 2, 3, 4, 5);
+        local returned_vec = original_vec:keep(function(v, _) return v % 2 == 0 end);
+
+        assert.is.truthy(
+            original_vec:is_same(returned_vec),
+            "This is creating a new Vector"
+        );
+    end)
+
+    it("Keep in the vector only the elements that returned true in the function", function()
+        local original_vec = vector.of(1, 2, 3, 4, 5);
+        local expected_vec = vector.of(2, 4);
+
+        original_vec:keep(function(v, _) return v % 2 == 0 end);
+
+        assert.are.equals(
+            original_vec, expected_vec,
+            "It's not correctly filtering the elements that end up in the vector"
+        );
+    end)
+
+    it("The operation should be aborted upon encountering an error, leaving the vector in a coherent state", function()
+        local original_vec = vector.of(1, 2, 3, 4, 5, 6);
+        local expected_vec = vector.of(2, 4, 5);
+        local keeper = function(v, _)
+            if v >= 5 then
+                error("Something goes wrong!");
+            else
+                return v % 2 == 0
+            end
+        end;
+
+        assert.has.errors(
+            function()
+                original_vec:keep(keeper);
+            end,
+            nil,
+            "It should raise an error if the filtering function throws an error"
+        );
+
+        assert.are.equals(
+            original_vec, expected_vec,
+            "You should leave only the filtered elements and the problematic element (at the end) in the vector"
+        );
+    end)
 end)

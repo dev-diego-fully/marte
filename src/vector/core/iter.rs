@@ -15,25 +15,56 @@ impl LuaVector {
         }
     }
 
-    pub(in crate::vector) fn transform<F: Fn(LuaValue, LuaInteger) -> LuaResult<LuaValue>>(
+    pub(in crate::vector) fn transform<F: Fn(LuaValue, usize) -> LuaResult<LuaValue>>(
         &mut self,
         transformer: F,
-    ) -> Result<(), String> {
+    ) -> Result<(), usize> {
         for i in 0..self.inner.len() {
-            let lua_index = (i + 1) as LuaInteger;
             let value = self.inner[i].clone();
-            let result = transformer(value, lua_index);
+            let result = transformer(value, i);
 
             match result {
                 Ok(v) => self.inner[i] = v,
                 Err(_) => {
-                    return Err(format!(
-                        "Error trying to transform the {} nth element",
-                        lua_index
-                    ));
+                    return Err(i);
                 }
             }
         }
         Ok(())
+    }
+
+    pub(in crate::vector) fn keep<F: Fn(LuaValue, usize) -> LuaResult<LuaValue>>(
+        &mut self,
+        keeper: F,
+    ) -> Result<(), usize> {
+        let len = self.inner.len();
+        let mut last = 0;
+
+        for i in 0..len {
+            let value = self.inner[i].clone();
+
+            match keeper(value.clone(), i) {
+                Ok(LuaValue::Boolean(true)) => {
+                    self.inner[last] = value.clone();
+                    self.inner[i] = LuaNil;
+                    last += 1;
+                }
+                Err(_) => {
+                    self.inner[last] = value.clone();
+                    self.clean(last + 1);
+                    return Err(i);
+                }
+                Ok(_) => continue,
+            }
+        }
+
+        self.clean(last);
+        Ok(())
+    }
+
+    fn clean(&mut self, starting_index: usize) {
+        for _ in starting_index..self.inner.len() {
+            self.inner.pop();
+        }
     }
 }
