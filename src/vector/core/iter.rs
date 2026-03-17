@@ -46,7 +46,6 @@ impl LuaVector {
             match keeper(value.clone(), i) {
                 Ok(LuaValue::Boolean(true)) => {
                     self.inner[last] = value.clone();
-                    self.inner[i] = LuaNil;
                     last += 1;
                 }
                 Err(_) => {

@@ -123,6 +123,21 @@ describe("keep", function()
         );
     end)
 
+    it("It must provide the lua index for the filtering function.", function()
+        local original_vec = vector.of("A", "B", "C", "D", "E");
+        local expected_vec = vector.of("A", "C", "E");
+
+        original_vec:keep(function(_, i)
+            return i % 2 == 1
+        end
+        );
+
+        assert.are.equals(
+            original_vec, expected_vec,
+            "It is not correctly providing a Lua index for the filtering function"
+        );
+    end)
+
     it("The operation should be aborted upon encountering an error, leaving the vector in a coherent state", function()
         local original_vec = vector.of(1, 2, 3, 4, 5, 6);
         local expected_vec = vector.of(2, 4, 5);
@@ -144,7 +159,7 @@ describe("keep", function()
 
         assert.are.equals(
             original_vec, expected_vec,
-            "You should leave only the filtered elements and the problematic element (at the end) in the vector"
+            "Should leave only the filtered elements and the problematic element (at the end) in the vector"
         );
     end)
 end)
