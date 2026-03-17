@@ -163,3 +163,110 @@ describe("keep", function()
         );
     end)
 end)
+
+describe("foldl", function()
+    it("Reduces the entire vector to a single value using the reduction function", function()
+        local base_vec = vector.of(1, 2, 3);
+        local expected_value = 6;
+
+        local result = base_vec:foldl(function(acc, v, _) return acc + v end);
+
+        assert.are.equals(
+            result, expected_value,
+            "Reduction is not being performed correctly"
+        );
+    end)
+
+    it("Accepts an optional value as the initial value", function()
+        local base_vec = vector.of(1, 2, 3);
+        local initial_value = 4;
+        local expected_value = 10;
+
+        local result = base_vec:foldl(
+            function(acc, v, _) return acc + v end,
+            initial_value
+        );
+
+        assert.are.equals(
+            result, expected_value,
+            "Fails to use the initial value when provided"
+        );
+    end)
+
+    it("Iterate through the vector in the forward direction", function()
+        local base_vector = vector.of(1, 2, 3, 4);
+        local expected_vector = vector.of(1, 2, 3, 4);
+
+        base_vector:foldl(vector.push, vector.new());
+
+        assert.are.equals(
+            base_vector, expected_vector,
+            "The iteration is not following the standard direction"
+        );
+    end)
+
+    it("Provides Lua indices to the reduction function", function()
+        local base_vec = vector.new(5);
+        local expected_vec = vector.of(1, 2, 3, 4, 5);
+        local result_vec = base_vec:foldl(vector.push, vector.new);
+
+        assert.are.equals(
+            result_vec, expected_vec,
+            "Is not correctly providing Lua indices to the reduction function"
+        );
+    end)
+end)
+
+
+describe("foldr", function()
+    it("Reduces the entire vector to a single value using the reduction function", function()
+        local base_vec = vector.of(1, 2, 3);
+        local expected_value = 6;
+
+        local result = base_vec:foldr(function(acc, v, _) return acc + v end);
+
+        assert.are.equals(
+            result, expected_value,
+            "Reduction is not being performed correctly"
+        );
+    end)
+
+    it("Accepts an optional value as the initial value", function()
+        local base_vec = vector.of(1, 2, 3);
+        local initial_value = 4;
+        local expected_value = 10;
+
+        local result = base_vec:foldr(
+            function(acc, v, _) return acc + v end,
+            initial_value
+        );
+
+        assert.are.equals(
+            result, expected_value,
+            "Fails to use the initial value when provided"
+        );
+    end)
+
+    it("Iterate through the vector in the backward direction", function()
+        local base_vector = vector.of(1, 2, 3, 4);
+        local expected_vector = vector.of(4, 3, 2, 1);
+
+        base_vector:foldl(vector.push, vector.new());
+
+        assert.are.equals(
+            base_vector, expected_vector,
+            "The iteration direction is not reversed"
+        );
+    end);
+
+    it("Provides Lua indices to the reduction function", function()
+        local base_vec = vector.new(5);
+        local expected_vec = vector.of(5, 4, 3, 2, 1);
+        local result_vec = base_vec:foldl(vector.push, vector.new);
+
+        assert.are.equals(
+            result_vec, expected_vec,
+            "Is not correctly providing Lua indices to the reduction function"
+        );
+    end)
+end)
