@@ -52,6 +52,52 @@ impl LuaVectorFacade {
             Ok(_) => Ok(this_any),
         }
     }
+
+    pub(in crate::vector) fn foldl(
+        _: &Lua,
+        this: &Self,
+        (folder, initial): (LuaFunction, Option<LuaValue>),
+    ) -> LuaResult<LuaValue> {
+        let callback = |acc, value, index| {
+            let lua_index = to_lua_index(index);
+
+            match folder.call((acc, value, lua_index)) {
+                Ok(v) => Ok(v),
+                Err(_) => Err(lua_index),
+            }
+        };
+
+        match this.vec.foldl(callback, initial) {
+            Ok(v) => Ok(v),
+            Err(index) => Err(LuaError::runtime(format!(
+                "Reduction failure. Error encountered during processing of the {}th element",
+                index
+            ))),
+        }
+    }
+
+    pub(in crate::vector) fn foldr(
+        _: &Lua,
+        this: &Self,
+        (folder, initial): (LuaFunction, Option<LuaValue>),
+    ) -> LuaResult<LuaValue> {
+        let callback = |acc, value, index| {
+            let lua_index = to_lua_index(index);
+
+            match folder.call((acc, value, lua_index)) {
+                Ok(v) => Ok(v),
+                Err(_) => Err(lua_index),
+            }
+        };
+
+        match this.vec.foldr(callback, initial) {
+            Ok(v) => Ok(v),
+            Err(index) => Err(LuaError::runtime(format!(
+                "Reduction failure. Error encountered during processing of the {}th element",
+                index
+            ))),
+        }
+    }
 }
 
 fn to_lua_index(rust_index: usize) -> LuaInteger {

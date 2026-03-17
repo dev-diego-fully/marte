@@ -197,7 +197,12 @@ describe("foldl", function()
         local base_vector = vector.of(1, 2, 3, 4);
         local expected_vector = vector.of(1, 2, 3, 4);
 
-        base_vector:foldl(vector.push, vector.new());
+        local pusher = function(vec, elem)
+            vec:push(elem)
+            return vec
+        end
+
+        base_vector:foldl(pusher, vector.new());
 
         assert.are.equals(
             base_vector, expected_vector,
@@ -208,7 +213,14 @@ describe("foldl", function()
     it("Provides Lua indices to the reduction function", function()
         local base_vec = vector.new(5);
         local expected_vec = vector.of(1, 2, 3, 4, 5);
-        local result_vec = base_vec:foldl(vector.push, vector.new);
+
+        local function index_pusher(vec, _, index)
+            vec:push(index);
+
+            return vec;
+        end
+
+        local result_vec = base_vec:foldl(index_pusher, vector.new());
 
         assert.are.equals(
             result_vec, expected_vec,
@@ -216,7 +228,6 @@ describe("foldl", function()
         );
     end)
 end)
-
 
 describe("foldr", function()
     it("Reduces the entire vector to a single value using the reduction function", function()
@@ -251,10 +262,15 @@ describe("foldr", function()
         local base_vector = vector.of(1, 2, 3, 4);
         local expected_vector = vector.of(4, 3, 2, 1);
 
-        base_vector:foldl(vector.push, vector.new());
+        local function pusher(vec, elem)
+            vec:push(elem)
+            return vec
+        end
+
+        local result_vec = base_vector:foldr(pusher, vector.new());
 
         assert.are.equals(
-            base_vector, expected_vector,
+            result_vec, expected_vector,
             "The iteration direction is not reversed"
         );
     end);
@@ -262,7 +278,14 @@ describe("foldr", function()
     it("Provides Lua indices to the reduction function", function()
         local base_vec = vector.new(5);
         local expected_vec = vector.of(5, 4, 3, 2, 1);
-        local result_vec = base_vec:foldl(vector.push, vector.new);
+        
+        local function index_pusher(vec, _, index)
+            vec:push(index);
+
+            return vec;
+        end
+
+        local result_vec = base_vec:foldr(index_pusher, vector.new());
 
         assert.are.equals(
             result_vec, expected_vec,

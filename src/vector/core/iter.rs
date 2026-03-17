@@ -15,10 +15,10 @@ impl LuaVector {
         }
     }
 
-    pub(in crate::vector) fn transform<F: Fn(LuaValue, usize) -> LuaResult<LuaValue>>(
-        &mut self,
-        transformer: F,
-    ) -> Result<(), usize> {
+    pub(in crate::vector) fn transform<F>(&mut self, transformer: F) -> Result<(), usize>
+    where
+        F: Fn(LuaValue, usize) -> LuaResult<LuaValue>,
+    {
         for i in 0..self.inner.len() {
             let value = self.inner[i].clone();
             let result = transformer(value, i);
@@ -33,10 +33,10 @@ impl LuaVector {
         Ok(())
     }
 
-    pub(in crate::vector) fn keep<F: Fn(LuaValue, usize) -> LuaResult<LuaValue>>(
-        &mut self,
-        keeper: F,
-    ) -> Result<(), usize> {
+    pub(in crate::vector) fn keep<F>(&mut self, keeper: F) -> Result<(), usize>
+    where
+        F: Fn(LuaValue, usize) -> LuaResult<LuaValue>,
+    {
         let len = self.inner.len();
         let mut last = 0;
 
@@ -59,6 +59,56 @@ impl LuaVector {
 
         self.clean(last);
         Ok(())
+    }
+
+    pub(in crate::vector) fn foldl<F>(
+        &self,
+        folder: F,
+        initial: Option<LuaValue>,
+    ) -> Result<LuaValue, LuaInteger>
+    where
+        F: Fn(LuaValue, LuaValue, usize) -> Result<LuaValue, LuaInteger>,
+    {
+        if self.inner.is_empty() {
+            return match initial {
+                Some(v) => Ok(v),
+                None => Ok(LuaNil),
+            };
+        }
+        let (mut result_value, skip) = match initial {
+            Some(v) => (v, 0),
+            None => (self.inner[0].clone(), 1),
+        };
+        for i in (0..self.inner.len()).skip(skip) {
+            let value = self.inner[i].clone();
+            result_value = folder(result_value.clone(), value, i)?;
+        }
+        Ok(result_value)
+    }
+
+    pub(in crate::vector) fn foldr<F>(
+        &self,
+        folder: F,
+        initial: Option<LuaValue>,
+    ) -> Result<LuaValue, LuaInteger>
+    where
+        F: Fn(LuaValue, LuaValue, usize) -> Result<LuaValue, LuaInteger>,
+    {
+        if self.inner.is_empty() {
+            return match initial {
+                Some(v) => Ok(v),
+                None => Ok(LuaNil),
+            };
+        }
+        let (mut result_value, skip) = match initial {
+            Some(v) => (v, 0),
+            None => (self.inner.last().unwrap().clone(), 1),
+        };
+        for i in (0..self.inner.len()).rev().skip(skip) {
+            let value = self.inner[i].clone();
+            result_value = folder(result_value.clone(), value, i)?;
+        }
+        Ok(result_value)
     }
 
     fn clean(&mut self, starting_index: usize) {
