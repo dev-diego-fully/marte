@@ -19,14 +19,20 @@ impl LuaVectorFacade {
         _: &Lua,
         (this_any, transformer): (LuaAnyUserData, LuaFunction),
     ) -> LuaResult<LuaAnyUserData> {
-        let op = |v, i| transformer.call((v, to_lua_index(i)));
+        let op = |v, i| {
+            let lua_index = to_lua_index(i);
+            match transformer.call((v, lua_index)) {
+                Ok(v) => Ok(v),
+                Err(_) => Err(lua_index),
+            }
+        };
         let mut this = this_any.borrow_mut::<Self>()?;
 
         match this.vec.transform(op) {
             Err(index) => {
                 let err = LuaError::runtime(format!(
                     "The transformation failed. Error trying to transform the {} nth element",
-                    to_lua_index(index)
+                    index
                 ));
                 Err(err)
             }
@@ -38,7 +44,14 @@ impl LuaVectorFacade {
         _: &Lua,
         (this_any, keep): (LuaAnyUserData, LuaFunction),
     ) -> LuaResult<LuaAnyUserData> {
-        let op = |v, i| keep.call((v, to_lua_index(i)));
+        let op = |v, i| {
+            let lua_index = to_lua_index(i);
+
+            match keep.call((v, lua_index)) {
+                Ok(v) => Ok(v),
+                Err(_) => Err(lua_index),
+            }
+        };
         let mut this = this_any.borrow_mut::<Self>()?;
 
         match this.vec.keep(op) {

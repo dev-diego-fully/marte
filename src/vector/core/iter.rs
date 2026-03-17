@@ -17,7 +17,7 @@ impl LuaVector {
 
     pub(in crate::vector) fn transform<F>(&mut self, transformer: F) -> Result<(), usize>
     where
-        F: Fn(LuaValue, usize) -> LuaResult<LuaValue>,
+        F: Fn(LuaValue, usize) -> Result<LuaValue, LuaInteger>,
     {
         for i in 0..self.inner.len() {
             let value = self.inner[i].clone();
@@ -35,7 +35,7 @@ impl LuaVector {
 
     pub(in crate::vector) fn keep<F>(&mut self, keeper: F) -> Result<(), usize>
     where
-        F: Fn(LuaValue, usize) -> LuaResult<LuaValue>,
+        F: Fn(LuaValue, usize) -> Result<LuaValue, LuaInteger>,
     {
         let len = self.inner.len();
         let mut last = 0;
