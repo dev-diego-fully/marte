@@ -278,7 +278,7 @@ describe("foldr", function()
     it("Provides Lua indices to the reduction function", function()
         local base_vec = vector.new(5);
         local expected_vec = vector.of(5, 4, 3, 2, 1);
-        
+
         local function index_pusher(vec, _, index)
             vec:push(index);
 
@@ -290,6 +290,46 @@ describe("foldr", function()
         assert.are.equals(
             result_vec, expected_vec,
             "Is not correctly providing Lua indices to the reduction function"
+        );
+    end)
+end)
+
+describe("sort", function()
+    it("Returns the original vector", function()
+        local base_vec = vector.of(3, 1);
+        local result_vec = base_vec:sort();
+
+        assert.is.truthy(
+            base_vec:is_same(result_vec)
+        );
+    end)
+
+    it("Sort the given vector", function()
+        local base_vec = vector.of(9, 2, 5, 7, 5, 4, 1);
+        local expected_vec = vector.of(1, 2, 4, 5, 5, 7, 9);
+        base_vec:sort();
+
+        assert.are.equals(
+            base_vec,
+            expected_vec
+        )
+    end)
+
+    it("It does not cause errors when used in empty vectors", function()
+        local base_vec = vector.new();
+
+        assert.has.no_errors(function()
+            base_vec:sort();
+        end)
+    end)
+
+    it("Use the comparison function if it is provided.", function()
+        local base_vec = vector.of(1, 2, 3, 4, 5, 6);
+        local expected_vec = vector.of(6, 5, 4, 3, 2, 1);
+        base_vec:sort(function(a, b) return a > b end);
+
+        assert.are.equals(
+            base_vec, expected_vec
         );
     end)
 end)

@@ -111,6 +111,65 @@ impl LuaVector {
         Ok(result_value)
     }
 
+    pub(in crate::vector) fn sort<F>(&mut self, comparer: F) -> Result<(), (LuaValue, LuaValue)>
+    where
+        F: Fn(LuaValue, LuaValue) -> Result<bool, (LuaValue, LuaValue)>,
+    {
+        self.quicksort(&comparer, 0 as LuaInteger, self.len())?;
+        Ok(())
+    }
+
+    fn quicksort<F>(
+        &mut self,
+        comparer: &F,
+        begin: LuaInteger,
+        end: LuaInteger,
+    ) -> Result<(), (LuaValue, LuaValue)>
+    where
+        F: Fn(LuaValue, LuaValue) -> Result<bool, (LuaValue, LuaValue)>,
+    {
+        if begin >= (end - 1) {
+            return Ok(());
+        }
+        let (mut i, mut j) = (begin, end - 1);
+        let pivot_index = (begin + (end - begin) / 2) as usize;
+        let pivot = self.inner[pivot_index].clone();
+
+        while i <= j {
+            while i < end {
+                let a = self.inner[i as usize].clone();
+
+                match comparer(a.clone(), pivot.clone()) {
+                    Ok(true) => i += 1,
+                    Ok(false) => break,
+                    Err(v) => return Err(v),
+                }
+            }
+            while j >= begin {
+                let b = self.inner[j as usize].clone();
+
+                match comparer(pivot.clone(), b.clone()) {
+                    Ok(true) => j -= 1,
+                    Ok(false) => break,
+                    Err(v) => return Err(v),
+                }
+            }
+            if i <= j {
+                self.inner.swap(i as usize, j as usize);
+                i += 1;
+                j -= 1;
+            }
+        }
+
+        if begin < j {
+            self.quicksort(comparer, begin, j + 1)?;
+        }
+        if i < end {
+            self.quicksort(comparer, i, end)?;
+        }
+        Ok(())
+    }
+
     fn clean(&mut self, starting_index: usize) {
         for _ in starting_index..self.inner.len() {
             self.inner.pop();

@@ -42,6 +42,7 @@ impl LuaUserData for LuaVectorFacade {
         methods.add_function("reverse", Self::reverse);
         methods.add_function("transform", Self::transform);
         methods.add_function("keep", Self::keep);
+        methods.add_function("sort", Self::sort);
 
         methods.add_method("foldl", Self::foldl);
         methods.add_method("foldr", Self::foldr);

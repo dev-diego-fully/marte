@@ -166,7 +166,7 @@ end
 ---
 --- This is an in-place operation and will modify the current Vector. If you do
 --- not want to modify it, use the copy method before using this method.
---- The comparison function should return true only if element a is greater than
+--- The comparison function should return true only if element a is lesser than
 --- element b.
 ---@generic T
 ---@param self Vector<T>

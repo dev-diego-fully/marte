@@ -111,6 +111,36 @@ impl LuaVectorFacade {
             ))),
         }
     }
+
+    pub(in crate::vector) fn sort(
+        lua: &Lua,
+        (this_any, comparer): (LuaAnyUserData, Option<LuaFunction>),
+    ) -> LuaResult<LuaAnyUserData> {
+        let mut this = this_any.borrow_mut::<Self>()?;
+        let comparer = match comparer {
+            Some(f) => f,
+            None => lua.load("function(a, b) return a < b end").eval()?,
+        };
+
+        let op = |a: LuaValue, b: LuaValue| {
+            let args = (a.clone(), b.clone());
+
+            match comparer.call(args) {
+                Ok(LuaValue::Boolean(bool_val)) => Ok(bool_val),
+                Ok(_) | Err(_) => Err((a, b)),
+            }
+        };
+
+        match this.vec.sort(op) {
+            Ok(_) => Ok(this_any),
+            Err(_) => {
+                let msg = String::from(
+                    "Sort failed. An error occurred while comparing the vector elements.",
+                );
+                Err(LuaError::runtime(msg))
+            }
+        }
+    }
 }
 
 fn to_lua_index(rust_index: usize) -> LuaInteger {
