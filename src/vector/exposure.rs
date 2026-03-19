@@ -46,5 +46,6 @@ impl LuaUserData for LuaVectorFacade {
 
         methods.add_method("foldl", Self::foldl);
         methods.add_method("foldr", Self::foldr);
+        methods.add_method("for_each", Self::for_each);
     }
 }

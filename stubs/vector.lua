@@ -79,6 +79,13 @@ end
 function Vector.is_same(self, other)
 end
 
+---
+---@generic T
+---@param self Vector<T>
+---@param operation fun(value: T, index: integer)
+function Vector.for_each(self, operation)
+end
+
 --- Creates a shallow copy of the Vector.
 ---
 --- This method is extremely useful when combined with transform, keep, sort, and reverse,

@@ -227,6 +227,18 @@ describe("foldl", function()
             "Is not correctly providing Lua indices to the reduction function"
         );
     end)
+
+    it("Does not modify the provided vector", function()
+        local base_vec = vector.of(2, 3, 4, 5, 7);
+        local expected_vec = vector.of(2, 3, 4, 5, 7);
+
+        base_vec:foldl(function(acc, v) return acc + v end)
+
+        assert.are.equals(
+            base_vec, expected_vec,
+            "It is modifying the original vector"
+        );
+    end)
 end)
 
 describe("foldr", function()
@@ -273,7 +285,7 @@ describe("foldr", function()
             result_vec, expected_vector,
             "The iteration direction is not reversed"
         );
-    end);
+    end)
 
     it("Provides Lua indices to the reduction function", function()
         local base_vec = vector.new(5);
@@ -292,6 +304,18 @@ describe("foldr", function()
             "Is not correctly providing Lua indices to the reduction function"
         );
     end)
+
+    it("Does not modify the provided vector", function()
+        local base_vec = vector.of(2, 3, 4, 5, 7);
+        local expected_vec = vector.of(2, 3, 4, 5, 7);
+
+        base_vec:foldr(function(acc, v) return acc + v end)
+
+        assert.are.equals(
+            base_vec, expected_vec,
+            "It is modifying the original vector"
+        );
+    end)
 end)
 
 describe("sort", function()
@@ -300,7 +324,8 @@ describe("sort", function()
         local result_vec = base_vec:sort();
 
         assert.is.truthy(
-            base_vec:is_same(result_vec)
+            base_vec:is_same(result_vec),
+            "It is modifying the original vector"
         );
     end)
 
@@ -310,17 +335,20 @@ describe("sort", function()
         base_vec:sort();
 
         assert.are.equals(
-            base_vec,
-            expected_vec
+            base_vec, expected_vec,
+            "Fails to sort the supplied vector correctly"
         )
     end)
 
     it("It does not cause errors when used in empty vectors", function()
         local base_vec = vector.new();
 
-        assert.has.no_errors(function()
-            base_vec:sort();
-        end)
+        assert.has.no_errors(
+            function()
+                base_vec:sort();
+            end, nil,
+            "Fails to handle empty vectors, causing errors"
+        )
     end)
 
     it("Use the comparison function if it is provided.", function()
@@ -329,7 +357,59 @@ describe("sort", function()
         base_vec:sort(function(a, b) return a > b end);
 
         assert.are.equals(
-            base_vec, expected_vec
+            base_vec, expected_vec,
+            "The comparison function is not being applied correctly for sorting"
+        );
+    end)
+end)
+
+describe("for_each", function()
+    it("Executes the iteration function for each element of the vector", function()
+        local base_vec = vector.of(1, 2, 3, 4, 5);
+        local count = 0;
+
+        base_vec:for_each(function(_) count = count + 1 end);
+
+        assert.are.equals(
+            count, #base_vec,
+            "Fails to visit every vector element once"
+        )
+    end)
+
+    it("Does not modify the provided vector", function()
+        local base_vec = vector.of(2, 3, 4, 5, 7);
+        local expected_vec = vector.of(2, 3, 4, 5, 7);
+
+        base_vec:for_each(function(v, i) return v + i end)
+
+        assert.are.equals(
+            base_vec, expected_vec,
+            "It is modifying the original vector"
+        );
+    end)
+
+    it("Iterates through the vector in the forward direction", function()
+        local base_vec = vector.of(4, 5, 3, 2, 9, 0);
+        local result_vec = vector.new();
+
+        base_vec:for_each(function(v) result_vec:push(v) end);
+
+        assert.are.equals(
+            result_vec, base_vec,
+            "It is not iterating through the vector in the correct direction"
+        );
+    end)
+
+    it("Provides Lua indices to the iteration function", function()
+        local base_vec = vector.new(8);
+        local result_vec = vector.new();
+        local expected_vec = vector.of(1, 2, 3, 4, 5, 6, 7, 8);
+
+        base_vec:for_each(function(_, i) result_vec:push(i) end)
+
+        assert.are.equals(
+            result_vec, expected_vec,
+            "Fails to pass correct Lua indices to the iteration function"
         );
     end)
 end)

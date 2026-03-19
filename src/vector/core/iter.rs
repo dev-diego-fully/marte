@@ -119,6 +119,16 @@ impl LuaVector {
         Ok(())
     }
 
+    pub(in crate::vector) fn for_each<F>(&self, op: F) -> Result<(), LuaInteger>
+    where
+        F: Fn(LuaValue, usize) -> Result<(), LuaInteger>,
+    {
+        for i in 0..self.inner.len() {
+            op(self.inner[i].clone(), i)?;
+        }
+        Ok(())
+    }
+
     fn quicksort<F>(
         &mut self,
         comparer: &F,
