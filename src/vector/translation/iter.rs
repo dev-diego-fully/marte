@@ -1,4 +1,4 @@
-use super::LuaVectorFacade;
+use super::vector::LuaVectorFacade;
 use mlua::prelude::*;
 
 impl LuaVectorFacade {

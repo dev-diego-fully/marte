@@ -9,7 +9,7 @@ pub(in crate::vector) type LuaVectorFacade = Vector;
 ///
 /// This layer handles all interactions with the `mlua` library, including type
 /// conversions and error handling, abstracting the core logic away from the FFI.
-pub(in crate::vector) struct Vector {
+pub(crate) struct Vector {
     /// The internal `LuaVector` that holds the actual data.
     pub(in crate::vector) vec: LuaVector,
 }

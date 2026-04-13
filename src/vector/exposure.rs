@@ -1,6 +1,6 @@
 use mlua::prelude::*;
 
-use super::translation::LuaVectorFacade;
+use super::translation::vector::LuaVectorFacade;
 
 /// The entry point for the Lua module, exposing the `Vector` type.
 ///

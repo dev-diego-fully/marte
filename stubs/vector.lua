@@ -24,7 +24,6 @@ end
 ---@param ... T The elements to be added to the vector.
 ---@return Vector<T>
 function vector.of(...)
-
 end
 
 --- Retrieves an element from the vector by its index.
@@ -79,7 +78,9 @@ end
 function Vector.is_same(self, other)
 end
 
----
+---Applies the operation function to every element of the vector. It does not mutate
+---the original vector nor does it return a new one upon completion.
+---Essentially, this method provides a functional alternative to a standard for loop.
 ---@generic T
 ---@param self Vector<T>
 ---@param operation fun(value: T, index: integer)
