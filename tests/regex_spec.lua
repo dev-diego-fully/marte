@@ -71,6 +71,25 @@ describe(
 )
 
 describe("matches", function()
+    local test_regex
+
+    before_each(function()
+        test_regex = regex.new("\\d+");
+    end)
+
+    it("Returns true if the pattern matches the provided string", function()
+        local string_with_match = "0123, 6789";
+        local does_matches = test_regex:matches(string_with_match);
+
+        assert.is.truthy(does_matches);
+    end)
+
+    it("Returns false if no match is found for the given pattern", function()
+        local no_match_string = "Banana";
+        local does_matches = test_regex:matches(no_match_string);
+
+        assert.is.falsy(does_matches);
+    end)
 end)
 
 describe("match", function()

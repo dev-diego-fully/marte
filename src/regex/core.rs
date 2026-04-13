@@ -11,4 +11,8 @@ impl LuaRegex {
             Err(_) => Err(()),
         }
     }
+
+    pub(in crate::regex) fn matches(&self, string: &[u8]) -> bool {
+        self.regex.is_match(string)
+    }
 }

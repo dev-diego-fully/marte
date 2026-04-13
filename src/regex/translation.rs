@@ -43,7 +43,9 @@ impl LuaRegexFacade {
     }
 
     pub(crate) fn matches(_: &Lua, this: &Self, (string,): (LuaString,)) -> LuaResult<LuaValue> {
-        Ok(LuaValue::Boolean(true))
+        let matched = this.inner.matches(&string.as_bytes());
+
+        Ok(LuaValue::Boolean(matched))
     }
 
     pub(crate) fn find(
