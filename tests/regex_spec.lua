@@ -99,6 +99,36 @@ describe("match_all", function()
 end)
 
 describe("replace", function()
+    local test_regex;
+    local replacement = "foo";
+
+    before_each(function()
+        test_regex = regex.new("\\d+");
+    end)
+
+    it("Should return a modified string when the pattern is found", function()
+        local test_string = "My number is: 1234";
+        local expected_string = "My number is: foo";
+
+        local result_str = test_regex:replace(test_string, replacement);
+
+        assert.are.equals(expected_string, result_str);
+    end)
+
+    it("Should return the original string if no match is found", function()
+        local test_string = "Let It Happen";
+        local result_str = test_regex:replace(test_string, replacement);
+
+        assert.are.equals(test_string, result_str);
+    end)
+
+    it("Should only replace the first occurrence of the pattern", function()
+        local test_string = "0123 4567";
+        local expected_string = "foo 4567";
+        local result_str = test_regex:replace(test_string, replacement);
+
+        assert.are.equals(expected_string, result_str);
+    end)
 end)
 
 describe("replace_all", function()

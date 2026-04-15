@@ -69,7 +69,10 @@ impl LuaRegexFacade {
         this: &Self,
         (string, replacement): (LuaString, LuaString),
     ) -> LuaResult<LuaString> {
-        lua.create_string("s")
+        lua.create_string(
+            this.inner
+                .replace(&string.as_bytes(), &replacement.as_bytes()),
+        )
     }
 
     pub(crate) fn replace_all(

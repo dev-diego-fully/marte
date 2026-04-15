@@ -15,4 +15,8 @@ impl LuaRegex {
     pub(in crate::regex) fn matches(&self, string: &[u8]) -> bool {
         self.regex.is_match(string)
     }
+
+    pub(in crate::regex) fn replace(&self, string: &[u8], replacement: &[u8]) -> Vec<u8> {
+        self.regex.replace(string, replacement).to_vec()
+    }
 }
