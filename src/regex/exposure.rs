@@ -12,11 +12,11 @@ fn marte_regex(lua: &Lua) -> LuaResult<LuaTable> {
 
 impl LuaUserData for LuaRegexFacade {
     fn add_methods<M: LuaUserDataMethods<Self>>(methods: &mut M) {
-        methods.add_method("matches", Self::matches);
-        methods.add_method("match", Self::find);
-        methods.add_method("match_all", Self::match_all);
-        methods.add_method("replace", Self::replace);
+        methods.add_method("test", Self::test);
+        methods.add_method("find_first", Self::find_first);
         methods.add_method("replace_all", Self::replace_all);
-        methods.add_method("split", Self::split);
+        methods.add_method("split_all", Self::split_all);
+        methods.add_method("process_all", Self::process_all);
+        methods.add_method("collect_all", Self::collect_all);
     }
 }

@@ -39,8 +39,7 @@ impl LuaVector {
     /// retrieves the element at that position, while a negative index `-j` retrieves
     /// the element `j` from the end of the vector.
     pub(in crate::vector) fn get(&self, index: LuaInteger) -> Option<LuaValue> {
-        self.resolve_index(index)
-            .map(|idx| self.inner[idx].clone())
+        self.resolve_index(index).map(|idx| self.inner[idx].clone())
     }
 
     /// Returns the number of elements in the vector.

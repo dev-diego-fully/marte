@@ -13,49 +13,57 @@ local Regex = {};
 function regex.new(pattern)
 end
 
----
+---Determines whether the pattern exists within the given string. The search
+---short-circuits upon finding the first occurrence for optimal performance.
 ---@param self Regex
 ---@param str string
 ---@return boolean
-function Regex.matches(self, str)
+function Regex.test(self, str)
 end
 
 ---
 ---@param self Regex
 ---@param str string
----@return string
-function Regex.match(self, str)
+---@return table | nil
+function Regex.find_first(self, str)
 end
 
 ---
----@param self Regex
 ---@param str string
----@param vec_or_op Vector<table>|fun(str: table)
----@return Vector<table> | nil
-function Regex.match_all(self, str, vec_or_op)
+---@param cb fun(s: string): boolean
+---@param limit integer?
+function Regex.process_all(self, str, cb, limit)
 end
 
 ---
----@param self Regex
 ---@param str string
----@param replacement string
----@return string
-function Regex.replace(self, str, replacement)
-end
-
----
----@param self Regex
----@param str string
----@param replacement string
----@return string
-function Regex.replace_all(self, str, replacement)
-end
-
----
----@param self Regex
----@param str string
+---@param limit integer?
+---@param vec Vector<string>?
 ---@return Vector<string>
-function Regex.split(self, str)
+function Regex.collect_all(self, str, limit, vec)
+end
+
+---Replaces occurrences of the pattern in the provided string with the
+---replacement value. If no limit is specified, it replaces all occurrences
+---found. If a limit is provided, it performs at most 'limit' substitutions.
+---This function is internally optimized to use the most efficient
+---replacement strategy based on the required number of operations.
+---@param self Regex
+---@param str string
+---@param replacement string
+---@param limit integer?
+---@return string
+function Regex.replace_all(self, str, replacement, limit)
+end
+
+---Splits the string exactly where the pattern occurs. When a limit is specified,
+---it executes up to 'limit-1' splits, keeping the rest of the string as the final
+---element in the returned Vector.
+---@param self Regex
+---@param str string
+---@param limit integer?
+---@return Vector<string>
+function Regex.split_all(self, str, limit)
 end
 
 return regex;

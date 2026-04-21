@@ -23,7 +23,7 @@ impl LuaVectorFacade {
     ///
     /// It handles optional arguments for initial size and filler value, consistent
     /// with the Lua module's behavior.
-    pub(in crate::vector) fn lua_new(
+    pub(crate) fn lua_new(
         _: &Lua,
         (size, filler): (Option<LuaInteger>, Option<LuaValue>),
     ) -> LuaResult<Self> {
@@ -39,7 +39,7 @@ impl LuaVectorFacade {
     /// The Lua-facing constructor for creating a `Vector` from variadic arguments.
     ///
     /// It accepts any number of arguments and uses them to populate a new vector.
-    pub(in crate::vector) fn lua_of(_: &Lua, values: LuaVariadic<LuaValue>) -> LuaResult<Self> {
+    pub(crate) fn lua_of(_: &Lua, values: LuaVariadic<LuaValue>) -> LuaResult<Self> {
         Ok(Self {
             vec: LuaVector::of(values.to_vec()),
         })
