@@ -2,6 +2,7 @@
 
 local regex = require("marte.regex");
 local vector = require("marte.vector");
+local assert_match_layout;
 
 describe("new", function()
     it("Should return the regex and nil if a valid pattern is provided", function()
@@ -103,6 +104,57 @@ describe("test", function()
 end)
 
 describe("find_first", function()
+    it("Should return only the first occurrence of the pattern in the string when present", function()
+        local test_regex = regex.new("[a-zA-Z]+");
+        local test_string = "Monkeys eat bananas";
+        local result = test_regex:find_first(test_string);
+
+        local expected = { [0] = "Monkeys" };
+
+        assert_match_layout(expected, result)
+    end)
+
+    it("Should return nil when the string does not contain an occurrence of the pattern", function()
+        local test_regex = regex.new("[a-zA-Z]+");
+        local test_string = "021246789";
+
+        local result = test_regex:find_first(test_string);
+
+        assert.is_nil(result);
+    end)
+
+    it("Should place the full match at index 0 and capture groups starting from index 1", function()
+        local test_regex = regex.new(
+            "Reject\\s+([a-zA-Z]+)\\s*!\\s+Return\\s+to\\s+([a-zA-Z]+)\\s*!"
+        );
+        local test_string = "Reject humanity! Return to monkey!";
+        local expected = {
+            [0] = "Reject humanity! Return to monkey!", "humanity", "monkey"
+        };
+
+        local result = test_regex:find_first(test_string);
+
+
+        assert_match_layout(expected, result);
+    end)
+
+    it("Should allow retrieving groups by name if they are named", function()
+        local test_regex = regex.new(
+            "(?P<state>[A-Z]{2})\\s*-\\s*(?P<city>[a-zA-Z\\s]+)"
+        );
+        local test_string = "RJ - Rio de Janeiro";
+        local expected = {
+            [0] = "RJ - Rio de Janeiro",
+            "RJ",
+            "Rio de Janeiro",
+            ["state"] = "RJ",
+            ["city"] = "Rio de Janeiro"
+        };
+
+        local result = test_regex:find_first(test_string);
+
+        assert_match_layout(expected, result);
+    end)
 end)
 
 describe("match_all", function()
@@ -204,3 +256,12 @@ describe("split_all", function()
         end);
     end)
 end)
+
+---
+---@param tbl table
+---@param match Match
+function assert_match_layout(tbl, match)
+    for k, v in pairs(tbl) do
+        assert.are.equals(v, match[k])
+    end
+end

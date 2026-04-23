@@ -1,15 +1,19 @@
+use std::collections::HashMap;
+
 use super::core::LuaRegex;
 use crate::vector::Vector;
 use mlua::prelude::*;
+use regex::bytes::Captures;
 
 pub(crate) type LuaRegexFacade = Regex;
+pub(in crate::regex) type LuaMatchFacade = Match;
 
 pub(crate) struct Regex {
     inner: LuaRegex,
 }
 
 impl LuaRegexFacade {
-    pub(crate) fn new(
+    pub(in crate::regex) fn new(
         lua: &Lua,
         (pattern,): (LuaString,),
     ) -> LuaResult<(Option<Self>, Option<LuaString>)> {
@@ -40,21 +44,28 @@ impl LuaRegexFacade {
         }
     }
 
-    pub(crate) fn test(_: &Lua, this: &Self, (string,): (LuaString,)) -> LuaResult<LuaValue> {
+    pub(in crate::regex) fn test(
+        _: &Lua,
+        this: &Self,
+        (string,): (LuaString,),
+    ) -> LuaResult<LuaValue> {
         let matched = this.inner.test(&string.as_bytes());
 
         Ok(LuaValue::Boolean(matched))
     }
 
-    pub(crate) fn find_first(
-        _: &Lua,
+    pub(in crate::regex) fn find_first(
+        lua: &Lua,
         this: &Self,
         (string,): (LuaString,),
-    ) -> LuaResult<Option<LuaTable>> {
-        Ok(None)
+    ) -> LuaResult<Option<Match>> {
+        Ok(match this.inner.find_first(&string.as_bytes()) {
+            Some(caps) => Some(Match::from(lua, caps, this.inner.capture_names())?),
+            None => None,
+        })
     }
 
-    pub(crate) fn replace_all(
+    pub(in crate::regex) fn replace_all(
         lua: &Lua,
         this: &Self,
         (string, replacement, limit): (LuaString, LuaString, Option<LuaInteger>),
@@ -72,7 +83,7 @@ impl LuaRegexFacade {
         }
     }
 
-    pub(crate) fn split_all(
+    pub(in crate::regex) fn split_all(
         lua: &Lua,
         this: &Self,
         (string, limit): (LuaString, Option<LuaInteger>),
@@ -98,21 +109,107 @@ impl LuaRegexFacade {
         }
     }
 
-    pub(crate) fn process_all(
-        lua: &Lua,
-        this: &Self,
-        (string, callback, limit): (LuaString, Option<LuaFunction>, Option<LuaInteger>),
+    pub(in crate::regex) fn process_all(
+        _lua: &Lua,
+        _this: &Self,
+        (_string, _callback, _limit): (LuaString, Option<LuaFunction>, Option<LuaInteger>),
     ) -> LuaResult<()> {
         Ok(())
     }
 
-    pub(crate) fn collect_all(
+    pub(in crate::regex) fn collect_all(
         lua: &Lua,
-        this: &Self,
-        (string, limit, output): (LuaString, Option<LuaInteger>, Option<LuaAnyUserData>),
+        _this: &Self,
+        (_string, _limit, _output): (LuaString, Option<LuaInteger>, Option<LuaAnyUserData>),
     ) -> LuaResult<LuaAnyUserData> {
         let lua_vec = Vector::lua_new(lua, (Some(0), None));
 
         lua.create_any_userdata(lua_vec)
+    }
+}
+
+pub(in crate::regex) struct Match {
+    enumarateds: Vec<Option<LuaString>>,
+    nameds: HashMap<LuaString, usize>,
+}
+
+impl LuaMatchFacade {
+    pub(in crate::regex) fn from<'a>(
+        lua: &Lua,
+        captures: Captures,
+        names: impl Iterator<Item = Option<&'a str>>,
+    ) -> LuaResult<Self> {
+        let mut nameds = HashMap::new();
+
+        for (i, s) in names.enumerate() {
+            if let Some(key) = s {
+                nameds.insert(lua.create_string(key)?, i);
+            }
+        }
+
+        let mut enums = Vec::new();
+
+        for opt_match in captures.iter() {
+            match opt_match {
+                Some(mat) => {
+                    let s = lua.create_string(mat.as_bytes())?;
+                    enums.push(Some(s));
+                }
+                None => enums.push(None),
+            }
+        }
+
+        Ok(Self {
+            enumarateds: enums,
+            nameds,
+        })
+    }
+
+    pub(in crate::regex) fn index(
+        _: &Lua,
+        this: &Self,
+        (key,): (LuaEither<LuaInteger, LuaString>,),
+    ) -> LuaResult<Option<LuaString>> {
+        let index = match key {
+            LuaEither::Left(i) if i >= 0 => Some(i as usize),
+            LuaEither::Right(s) => this.nameds.get(&s).cloned(),
+            _ => return Err(LuaError::runtime("Invalid negative index for Match object")),
+        };
+        let index = match index {
+            None => return Ok(None),
+            Some(i) => i,
+        };
+        if index <= this.enumarateds.len() {
+            return Ok(this.enumarateds[index].clone());
+        }
+        Ok(None)
+    }
+
+    pub(in crate::regex) fn newindex(_: &Lua, _: &Self, _: (LuaValue, LuaValue)) -> LuaResult<()> {
+        Err(LuaError::runtime("Match objects are immutable"))
+    }
+
+    pub(in crate::regex) fn equals(
+        _: &Lua,
+        this: &Self,
+        other: LuaAnyUserData,
+    ) -> LuaResult<LuaValue> {
+        let mtc = match other.borrow::<LuaMatchFacade>() {
+            Ok(udr) => udr,
+            Err(_) => return Ok(LuaValue::Boolean(false)),
+        };
+        let equality = this.enumarateds == mtc.enumarateds;
+
+        Ok(LuaValue::Boolean(equality))
+    }
+
+    pub(in crate::regex) fn len(_: &Lua, this: &Self, _: ()) -> LuaResult<usize> {
+        let len = this.enumarateds.len();
+
+        if len == 0 {
+            return Err(LuaError::runtime("Invalid empty Match object"));
+        }
+
+        Ok(this.enumarateds.len() - 1)
     }
 }

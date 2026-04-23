@@ -1,4 +1,4 @@
-use regex::bytes::Regex;
+use regex::bytes::{Captures, Regex};
 
 pub(crate) struct LuaRegex {
     regex: Regex,
@@ -14,6 +14,10 @@ impl LuaRegex {
 
     pub(in crate::regex) fn test(&self, string: &[u8]) -> bool {
         self.regex.is_match(string)
+    }
+
+    pub(in crate::regex) fn find_first<'a>(&'a self, string: &'a [u8]) -> Option<Captures<'a>> {
+        self.regex.captures(string)
     }
 
     pub(in crate::regex) fn replace_all(
@@ -39,5 +43,9 @@ impl LuaRegex {
             Some(n) => self.regex.splitn(string, n as usize).collect(),
             None => self.regex.split(string).collect(),
         }
+    }
+
+    pub(in crate::regex) fn capture_names(&self) -> regex::bytes::CaptureNames<'_> {
+        self.regex.capture_names()
     }
 }

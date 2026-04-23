@@ -5,6 +5,9 @@ local regex = {};
 ---@class Regex
 local Regex = {};
 
+---@class Match
+local Match = {};
+
 ---Tries to build a regex from the supplied string. Returns regex and nil if
 ---the string is valid UTF-8 and a valid pattern is formed. On failure,
 ---returns nil followed by an error message describing the occurrence.
@@ -24,22 +27,23 @@ end
 ---
 ---@param self Regex
 ---@param str string
----@return table | nil
+---@return Match
 function Regex.find_first(self, str)
 end
 
 ---
 ---@param str string
----@param cb fun(s: string): boolean
+---@param cb fun(s: Match): boolean
 ---@param limit integer?
 function Regex.process_all(self, str, cb, limit)
 end
 
 ---
+---@generic T
 ---@param str string
 ---@param limit integer?
----@param vec Vector<string>?
----@return Vector<string>
+---@param vec Vector<T | Match>?
+---@return Vector<T | Match>
 function Regex.collect_all(self, str, limit, vec)
 end
 

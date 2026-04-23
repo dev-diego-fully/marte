@@ -1,4 +1,4 @@
-use super::translation::LuaRegexFacade;
+use super::translation::{LuaMatchFacade, LuaRegexFacade};
 use mlua::prelude::*;
 
 #[mlua::lua_module]
@@ -18,5 +18,14 @@ impl LuaUserData for LuaRegexFacade {
         methods.add_method("split_all", Self::split_all);
         methods.add_method("process_all", Self::process_all);
         methods.add_method("collect_all", Self::collect_all);
+    }
+}
+
+impl LuaUserData for LuaMatchFacade {
+    fn add_methods<M: LuaUserDataMethods<Self>>(methods: &mut M) {
+        methods.add_meta_method("__index", Self::index);
+        methods.add_meta_method("__newindex", Self::newindex);
+        methods.add_meta_method("__eq", Self::equals);
+        methods.add_meta_method("__len", Self::len);
     }
 }
