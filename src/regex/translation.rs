@@ -60,7 +60,7 @@ impl LuaRegexFacade {
         (string,): (LuaString,),
     ) -> LuaResult<Option<Match>> {
         Ok(match this.inner.find_first(&string.as_bytes()) {
-            Some(caps) => Some(Match::from(lua, caps, this.inner.capture_names())?),
+            Some(caps) => Some(Match::from(lua, &caps, this.inner.capture_names())?),
             None => None,
         })
     }
@@ -110,11 +110,39 @@ impl LuaRegexFacade {
     }
 
     pub(in crate::regex) fn process_all(
-        _lua: &Lua,
-        _this: &Self,
-        (_string, _callback, _limit): (LuaString, Option<LuaFunction>, Option<LuaInteger>),
+        lua: &Lua,
+        this: &Self,
+        (string, callback, limit): (LuaString, LuaFunction, Option<LuaInteger>),
     ) -> LuaResult<()> {
-        Ok(())
+        let lim = match limit {
+            Some(n) if n < 0 => return Err(LuaError::runtime("Invalid limit negativa value")),
+            Some(n) => Some(n as u64),
+            None => None,
+        };
+
+        let operation = |mat: &Captures<'_>, index: usize| {
+            let lua_match = match LuaMatchFacade::from(lua, mat, this.inner.capture_names()) {
+                Ok(matc) => matc,
+                Err(_) => return Err("Error parsing rust Match"),
+            };
+            let lua_index = (index + 1) as LuaInteger;
+
+            let result = match callback.call::<LuaValue>((lua_match, lua_index)) {
+                Ok(v) => v,
+                Err(_) => return Err("Error parsing lua result"),
+            };
+
+            match result {
+                LuaValue::Boolean(boolean) => Ok(boolean),
+                LuaNil => Ok(false),
+                _ => Ok(true),
+            }
+        };
+
+        match this.inner.process_all(&string.as_bytes(), operation, lim) {
+            Err(msg) => Err(LuaError::runtime(msg)),
+            _ => Ok(()),
+        }
     }
 
     pub(in crate::regex) fn collect_all(
@@ -136,7 +164,7 @@ pub(in crate::regex) struct Match {
 impl LuaMatchFacade {
     pub(in crate::regex) fn from<'a>(
         lua: &Lua,
-        captures: Captures,
+        captures: &Captures,
         names: impl Iterator<Item = Option<&'a str>>,
     ) -> LuaResult<Self> {
         let mut nameds = HashMap::new();

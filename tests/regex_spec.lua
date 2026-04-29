@@ -147,8 +147,8 @@ describe("find_first", function()
             [0] = "RJ - Rio de Janeiro",
             "RJ",
             "Rio de Janeiro",
-            ["state"] = "RJ",
-            ["city"] = "Rio de Janeiro"
+            state = "RJ",
+            city = "Rio de Janeiro"
         };
 
         local result = test_regex:find_first(test_string);
@@ -157,7 +157,134 @@ describe("find_first", function()
     end)
 end)
 
-describe("match_all", function()
+describe("process_all", function()
+    it("Should execute the provided operation for each occurrence of the pattern found in the string", function()
+        local test_regex = regex.new("\\d");
+        local test_string = "0123456789";
+
+        local expected_count = #test_string;
+
+        local counter = 0;
+        local function counting_operation()
+            counter = counter + 1;
+
+            return true;
+        end
+
+        test_regex:process_all(test_string, counting_operation);
+
+        assert.are.equals(expected_count, counter);
+    end)
+
+    it("Should never execute the operation function if no pattern occurrences are found in the string", function()
+        local test_regex = regex.new("\\d+");
+        local test_string = "Hello, World! It is nice to exist";
+        local expected_count = 0;
+
+        local counter = 0;
+        local function counting_operation()
+            counter = counter + 1;
+
+            return true;
+        end
+
+        test_regex:process_all(test_string, counting_operation);
+
+        assert.are.equals(expected_count, counter);
+    end)
+
+    it("Should provide the occurrence count as the second argument to the operation function", function()
+        local test_regex = regex.new("_");
+        local test_string = "_a_snake_case_name";
+
+        local expected_nths = vector.of(1, 2, 3, 4);
+        local result_nths = vector.new();
+
+        local function ocurrence_counter_checker(_, nth)
+            result_nths:push(nth);
+
+            return true;
+        end
+
+        test_regex:process_all(test_string, ocurrence_counter_checker);
+
+        assert.are.equals(expected_nths, result_nths);
+    end)
+
+    it("Should provide Match objects to the operation function similarly to find_first", function()
+        local test_regex = regex.new("(?P<first>w{3})\\s+(?P<second>\\w{3})");
+        local test_string = "abc def ghi jkl";
+        local expecteds = {
+            {
+                [0] = "abc def",
+                "abc",
+                "def",
+                first = "abc",
+                second = "def"
+            },
+            {
+                [0] = "ghi jkl",
+                "ghi",
+                "jkl",
+                first = "ghi",
+                second = "jkl"
+            }
+        };
+
+        local function match_check(match, nth)
+            assert_match_layout(expecteds[nth], match);
+
+            return true;
+        end
+
+        test_regex:process_all(test_string, match_check);
+    end)
+
+    it("Should stop execution if the count reaches the limit value", function()
+        local test_regex = regex.new("\\d{2}");
+        local test_string = "02 01 44 33 26 11 1";
+        local test_limit = 3;
+        local expected_count = test_limit;
+
+        local counter = 0;
+        local function counting_operation()
+            counter = counter + 1;
+
+            return true;
+        end
+
+        test_regex:process_all(test_string, counting_operation, test_limit);
+
+        assert.are.equals(expected_count, counter);
+    end)
+
+    it("Should stop execution if the operation function returns false", function()
+        local test_regex = regex.new("\\s+");
+        local test_string = "This is a string with a lot    of   spaces     ! :D";
+        local expected_count = 7;
+
+        local counter = 0;
+        local function counting_operation()
+            counter = counter + 1;
+
+            return counter < expected_count;
+        end
+
+        test_regex:process_all(test_string, counting_operation);
+
+        assert.are.equals(expected_count, counter);
+    end)
+
+    it("Should raise an error if the limit is negative", function()
+        local test_regex = regex.new(".*");
+        local test_string = "A string that m4tch with a l0t of th1ngs";
+        local invalid_limit = -1;
+        local just_continue_op = function() return true end;
+
+        assert.has_errors(function()
+            test_regex:process_all(test_string, just_continue_op, invalid_limit);
+        end);
+    end)
 end)
 
 describe("replace_all", function()

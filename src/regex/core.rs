@@ -20,6 +20,27 @@ impl LuaRegex {
         self.regex.captures(string)
     }
 
+    pub(in crate::regex) fn process_all(
+        &self,
+        string: &[u8],
+        operation: impl Fn(&Captures, usize) -> Result<bool, &'static str>,
+        limit: Option<u64>,
+    ) -> Result<(), &str> {
+        let limit = limit.map(|u| u as usize);
+
+        for (i, cap) in self.regex.captures_iter(string).enumerate() {
+            if matches!(limit, Some(lim) if i == lim) {
+                break;
+            }
+            match operation(&cap, i) {
+                Ok(true) => continue,
+                Ok(false) => break,
+                Err(msg) => return Err(msg),
+            };
+        }
+        Ok(())
+    }
+
     pub(in crate::regex) fn replace_all(
         &self,
         string: &[u8],
