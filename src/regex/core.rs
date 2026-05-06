@@ -26,12 +26,9 @@ impl LuaRegex {
         operation: impl Fn(&Captures, usize) -> Result<bool, &'static str>,
         limit: Option<u64>,
     ) -> Result<(), &str> {
-        let limit = limit.map(|u| u as usize);
+        let limit = limit.map(|u| u as usize).unwrap_or(usize::MAX);
 
-        for (i, cap) in self.regex.captures_iter(string).enumerate() {
-            if matches!(limit, Some(lim) if i == lim) {
-                break;
-            }
+        for (i, cap) in self.regex.captures_iter(string).enumerate().take(limit) {
             match operation(&cap, i) {
                 Ok(true) => continue,
                 Ok(false) => break,
@@ -39,6 +36,18 @@ impl LuaRegex {
             };
         }
         Ok(())
+    }
+
+    pub(in crate::regex) fn collect_all<'a>(
+        &'a self,
+        string: &'a [u8],
+        limit: Option<u64>,
+    ) -> std::iter::Take<regex::bytes::CaptureMatches<'a, 'a>> {
+        let lim = match limit {
+            Some(l) => l as usize,
+            None => usize::MAX,
+        };
+        self.regex.captures_iter(string).take(lim)
     }
 
     pub(in crate::regex) fn replace_all(

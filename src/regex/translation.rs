@@ -147,12 +147,30 @@ impl LuaRegexFacade {
 
     pub(in crate::regex) fn collect_all(
         lua: &Lua,
-        _this: &Self,
-        (_string, _limit, _output): (LuaString, Option<LuaInteger>, Option<LuaAnyUserData>),
+        this: &Self,
+        (string, limit, output): (LuaString, Option<LuaInteger>, Option<LuaAnyUserData>),
     ) -> LuaResult<LuaAnyUserData> {
-        let lua_vec = Vector::lua_new(lua, (Some(0), None));
+        let output = match output {
+            Some(aud) => aud,
+            None => {
+                let vec = Vector::lua_new(lua, (None, None))?;
+                lua.create_any_userdata(vec)?
+            }
+        };
 
-        lua.create_any_userdata(lua_vec)
+        let mut vec = output.borrow_mut()?;
+
+        for cap in this
+            .inner
+            .collect_all(&string.as_bytes(), limit.map(|u| u as u64))
+        {
+            let mat = LuaMatchFacade::from(lua, &cap, this.inner.capture_names())?;
+            let lua_match = mat.into_lua(lua)?;
+
+            Vector::push(lua, &mut vec, (lua_match,))?;
+        }
+
+        Ok(output)
     }
 }
 

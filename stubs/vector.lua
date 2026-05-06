@@ -102,6 +102,13 @@ end
 function Vector.copy(self)
 end
 
+---
+---@generic T
+---@param self Vector
+---@param predicate fun(value: T, index: integer): boolean
+function Vector.all(self, predicate)
+end
+
 --- Applies the transformation function to each element of the Vector,
 --- modifying it in the process.
 ---

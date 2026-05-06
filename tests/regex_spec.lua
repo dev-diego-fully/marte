@@ -157,6 +157,126 @@ describe("find_first", function()
     end)
 end)
 
+describe("collect_all", function()
+    describe("When no occurrences are found in the string:", function()
+        local test_string = "Just a string without digits";
+        local test_regex = regex.new("\\d+");
+
+        it("Should create and return an empty Vector if no output is provided", function()
+            local result = test_regex:collect_all(test_string);
+
+            assert.is.truthy(#result == 0);
+        end)
+
+        it("Should return the same provided output Vector if one is provided", function()
+            local test_output = vector.new();
+            local result = test_regex:collect_all(test_string, nil, test_output);
+
+            assert.is.truthy(result:is_same(test_output));
+            assert.is.truthy(#result == 0);
+        end)
+    end)
+
+    describe("When occurrences are found and no limit is specified:", function()
+        local test_regex = regex.new("\\w+");
+        local test_string = "Just a string with words";
+
+        it("Should create and return a Vector containing all matches if no output is provided", function()
+            local expected = vector.of(
+                { [0] = "Just" },
+                { [0] = "a" },
+                { [0] = "string" },
+                { [0] = "with" },
+                { [0] = "words" }
+            );
+
+            local result = test_regex:collect_all(test_string);
+
+            for i = 1, #result, 1 do
+                assert_match_layout(expected[i], result[i]);
+            end
+        end)
+
+        it("Should append all matches to the end of the output Vector and return it if provided", function()
+            local expected = vector.of(
+                "Previous Value", "Other previous value",
+                { [0] = "Just" },
+                { [0] = "a" },
+                { [0] = "string" },
+                { [0] = "with" },
+                { [0] = "words" }
+            );
+
+            local output = vector.of("Previous Value", "Other previous value");
+            local original_len = #output;
+
+            local result = test_regex:collect_all(test_string, nil, output);
+
+            assert.is.truthy(result:is_same(output));
+            assert.are.equals(#expected, #result);
+
+            for i = 1, #result, 1 do
+                if i <= original_len then
+                    assert.are.equals(expected[i], result[i]);
+                else
+                    assert_match_layout(expected[i], result[i]);
+                end
+            end
+        end)
+    end)
+
+    describe("When occurrences are found and a limit is provided:", function()
+        local test_regex = regex.new("\\s+");
+        local test_string = "String    with   spaces  ";
+        local test_limit = 5;
+
+        it("Should create and return a Vector containing matches up to the limit", function()
+            local expected = vector.of(
+                { [0] = "    " },
+                { [0] = "   " },
+                { [0] = "  " }
+            );
+
+            local result = test_regex:collect_all(
+                test_string, test_limit
+            );
+            assert.are.equals(#expected, #result);
+
+            for i = 1, #result, 1 do
+                assert_match_layout(expected[i], result[i]);
+            end
+        end)
+
+        it("Should append matches to the end of the output Vector up to the limit and return it if provided", function()
+            local expected = vector.of(
+                "Previous", "Value",
+                { [0] = "    " },
+                { [0] = "   " },
+                { [0] = "  " }
+            );
+            local output = vector.of(
+                "Previous", "Value"
+            );
+            local original_len = #output;
+
+            local result = test_regex:collect_all(
+                test_string, test_limit, output
+            );
+
+            assert.are.equals(#expected, #output);
+            assert.is.truthy(output:is_same(result));
+
+            for i = 1, #result, 1 do
+                if i <= original_len then
+                    assert.are.equals(expected[i], result[i]);
+                else
+                    assert_match_layout(expected[i], result[i]);
+                end
+            end
+        end)
+    end)
+end)
+
 describe("process_all", function()
     it("Should execute the provided operation for each occurrence of the pattern found in the string", function()
         local test_regex = regex.new("\\d");

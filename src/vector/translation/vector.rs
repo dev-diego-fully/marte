@@ -106,11 +106,7 @@ impl LuaVectorFacade {
     /// The Lua-facing `push` method.
     ///
     /// Appends a new value to the end of the vector and returns `true` on success.
-    pub(in crate::vector) fn push(
-        _: &Lua,
-        this: &mut Self,
-        (value,): (LuaValue,),
-    ) -> LuaResult<LuaValue> {
+    pub(crate) fn push(_: &Lua, this: &mut Self, (value,): (LuaValue,)) -> LuaResult<LuaValue> {
         Ok(LuaValue::Boolean(this.vec.push(value)))
     }
 
