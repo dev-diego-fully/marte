@@ -4,6 +4,7 @@ local vector = {};
 
 ---A Lua object that provides a dynamic array with common vector operations.
 ---@class Vector
+---@operator len: integer
 local Vector = {}
 
 --- Creates a new vector.
