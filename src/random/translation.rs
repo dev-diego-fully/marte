@@ -44,12 +44,11 @@ impl Random {
         Ok(0.0)
     }
 
-    pub(super) fn boolean(
-        lua: &Lua,
-        this: &mut Self,
-        (prob,): (Option<LuaNumber>,),
-    ) -> LuaResult<LuaValue> {
-        Ok(LuaValue::Boolean(false))
+    pub(super) fn boolean(_: &Lua, this: &mut Self, (prob,): (LuaNumber,)) -> LuaResult<LuaValue> {
+        match this.inner.boolean(prob) {
+            Ok(val) => Ok(LuaValue::Boolean(val)),
+            Err(msg) => Err(LuaError::runtime(msg)),
+        }
     }
 }
 
