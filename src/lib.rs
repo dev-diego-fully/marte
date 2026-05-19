@@ -1,7 +1,8 @@
 use mlua::prelude::*;
 
-mod vector;
+mod random;
 mod regex;
+mod vector;
 
 #[mlua::lua_module]
 fn marte(lua: &Lua) -> LuaResult<LuaTable> {
