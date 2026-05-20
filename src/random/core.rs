@@ -24,6 +24,20 @@ impl LuaRandom {
             p => Ok(self.generator.random_bool(p)),
         }
     }
+
+    pub(super) fn integer(
+        &mut self,
+        min: LuaInteger,
+        max: LuaInteger,
+        closed: bool,
+    ) -> Result<LuaInteger, String> {
+        match (min, max, closed) {
+            (m, n, false) if n < m => Err(format!("Interval [{}, {}) is empty", m, n)),
+            (m, n, true) if n < m => Err(format!("Interval [{}, {}] is empty", m, n)),
+            (m, n, false) => Ok(self.generator.random_range(m..n)),
+            (m, n, true) => Ok(self.generator.random_range(m..=n)),
+        }
+    }
 }
 
 impl LuaRandom {

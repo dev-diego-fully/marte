@@ -29,11 +29,16 @@ impl Random {
     }
 
     pub(super) fn integer(
-        lua: &Lua,
+        _: &Lua,
         this: &mut Self,
-        (min, max): (LuaInteger, LuaInteger),
+        (min, max, closed): (LuaInteger, LuaInteger, Option<bool>),
     ) -> LuaResult<LuaInteger> {
-        Ok(0)
+        let is_closed = closed.unwrap_or(false);
+
+        match this.inner.integer(min, max, is_closed) {
+            Ok(value) => Ok(value),
+            Err(msg) => Err(LuaError::runtime(msg)),
+        }
     }
 
     pub(super) fn number(
