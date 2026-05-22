@@ -42,11 +42,16 @@ impl Random {
     }
 
     pub(super) fn number(
-        lua: &Lua,
+        _: &Lua,
         this: &mut Self,
-        (min, max): (LuaNumber, LuaNumber),
+        (min, max, closed): (LuaNumber, LuaNumber, Option<bool>),
     ) -> LuaResult<LuaNumber> {
-        Ok(0.0)
+        let is_closed = closed.unwrap_or(false);
+
+        match this.inner.number(min, max, is_closed) {
+            Ok(value) => Ok(value),
+            Err(msg) => Err(LuaError::runtime(msg)),
+        }
     }
 
     pub(super) fn boolean(_: &Lua, this: &mut Self, (prob,): (LuaNumber,)) -> LuaResult<LuaValue> {

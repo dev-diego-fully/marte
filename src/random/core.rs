@@ -38,6 +38,26 @@ impl LuaRandom {
             (m, n, true) => Ok(self.generator.random_range(m..=n)),
         }
     }
+
+    pub(super) fn number(
+        &mut self,
+        min: LuaNumber,
+        max: LuaNumber,
+        closed: bool,
+    ) -> Result<LuaNumber, String> {
+        match (min, max, closed) {
+            (m, n, false) if n < m => Err(format!("Interval [{}, {}) is empty", m, n)),
+            (m, n, true) if n < m => Err(format!("Interval [{}, {}] is empty", m, n)),
+            (m, n, false) => {
+                let mut value = self.generator.random_range(m..n);
+                while value >= n {
+                    value = self.generator.random_range(m..n);
+                }
+                Ok(value)
+            }
+            (m, n, true) => Ok(self.generator.random_range(m..=n)),
+        }
+    }
 }
 
 impl LuaRandom {

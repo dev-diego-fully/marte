@@ -6,7 +6,8 @@ local vector = require("marte.vector");
 local generate_seeds, generate_sequence, generate_sequences;
 local assert_sequences_are_differents;
 
-local EPSILON = 2 ^ -52;
+local ZEROS_ULP = 2 ^ -1074;
+local ONES_ULP = 2 ^ -52;
 local MIN_INTEGER = math.mininteger or -(2 ^ 53);
 local MAX_INTEGER = math.maxinteger or (2 ^ 53);
 local MIN_FLOAT = -(2.0 ^ 53);
@@ -63,6 +64,221 @@ describe("random.new", function()
     end)
 end)
 
+describe("Random.integer", function()
+    local SEQUENCE_LEN = 266;
+
+    local INTERVAL_TEST_PAIRS = {
+        { 0,           1 },
+        { -1,          0 },
+        { -1,          1 },
+        { 0,           MAX_INTEGER },
+        { MIN_INTEGER, MAX_INTEGER },
+        { MIN_INTEGER, MAX_INTEGER },
+    };
+
+    local RANGE_CLOSENESS_TEST_PAIRS = {
+        { 0,               1 }, { -1, 0 }, { -1, 1 },
+        { MIN_INTEGER,     MIN_INTEGER + 1 },
+        { MAX_INTEGER - 1, MAX_INTEGER },
+    };
+
+    ---
+    ---@param generator Random
+    ---@param min integer
+    ---@param max integer
+    ---@param closed boolean
+    ---@return integer
+    local function operation(generator, min, max, closed)
+        return generator:integer(min, max, closed);
+    end
+
+    it("Should raise an error if min > max", function()
+        local generator = random.new(0);
+
+        for _, p in ipairs(INTERVAL_TEST_PAIRS) do
+            local min, max = p[2], p[1];
+
+            assert.has_errors(function()
+                generator:integer(min, max, false);
+            end);
+            assert.has_errors(function()
+                generator:integer(min, max, true);
+            end);
+        end
+    end)
+
+    it("Should always generate values within the [min, max] interval", function()
+        local seed = 10;
+
+        for _, p in ipairs(INTERVAL_TEST_PAIRS) do
+            local min, max = p[1], p[2];
+            local sequence = generate_sequence(
+                seed, SEQUENCE_LEN,
+                operation, min, max
+            );
+
+            for i = 1, #sequence, 1 do
+                local value = sequence[i];
+
+                assert.is.truthy(value >= min and value <= max);
+            end
+        end
+    end)
+
+    it("Should exclude the max value from the generation range if closed is absent or false", function()
+        local seed = 11;
+
+        for _, p in ipairs(RANGE_CLOSENESS_TEST_PAIRS) do
+            local min, max = p[1], p[2];
+
+            local sequence = generate_sequence(
+                seed, SEQUENCE_LEN,
+                operation, min, max, false
+            );
+
+            for i = 1, #sequence, 1 do
+                local value = sequence[i];
+
+                assert.is.truthy(value < max);
+            end
+        end
+    end)
+
+    it("Should include the max value in the generation range if closed is true", function()
+        local seed = 12;
+
+        for _, p in ipairs(RANGE_CLOSENESS_TEST_PAIRS) do
+            local min, max = p[1], p[2];
+
+            local sequence = generate_sequence(
+                seed, SEQUENCE_LEN,
+                operation, min, max, true
+            );
+            local seen_max = false;
+
+            for i = 1, #sequence, 1 do
+                if sequence[i] == max then
+                    seen_max = true;
+                end
+            end
+
+            if not seen_max then
+                print(min, max);
+            end
+
+            assert.is.truthy(seen_max);
+        end
+    end)
+end)
+
+describe("Random.number", function()
+    local SEQUENCE_LEN = 266;
+
+    local INTERVAL_TEST_PAIRS = {
+        { 0.0,       1.0 },
+        { -1.0,      0.0 },
+        { -1.0,      1.0 },
+        { 0.0,       MAX_FLOAT },
+        { MIN_FLOAT, MAX_FLOAT },
+        { MIN_FLOAT, MAX_FLOAT },
+    };
+
+    local RANGE_CLOSENESS_TEST_PAIRS = {
+        { 0.0,       ZEROS_ULP }, { -ZEROS_ULP, 0 }, { -ZEROS_ULP, ZEROS_ULP },
+        { MIN_FLOAT, MIN_FLOAT + 1 }, { MAX_FLOAT - 1, MAX_FLOAT }
+    };
+
+    ---
+    ---@param generator Random
+    ---@param min number
+    ---@param max number
+    ---@param closed boolean
+    ---@return number
+    local function operation(generator, min, max, closed)
+        return generator:number(min, max, closed);
+    end
+
+    it("Should raise an error if min > max", function()
+        local generator = random.new(0);
+
+        for _, p in ipairs(INTERVAL_TEST_PAIRS) do
+            local min, max = p[2], p[1];
+
+            assert.has_errors(function()
+                generator:number(min, max, false);
+            end);
+            assert.has_errors(function()
+                generator:number(min, max, true);
+            end);
+        end
+    end)
+
+    it("Should always generate values within the [min, max] interval", function()
+        local seed = 10;
+
+        for _, p in ipairs(INTERVAL_TEST_PAIRS) do
+            local min, max = p[1], p[2];
+            local sequence = generate_sequence(
+                seed, SEQUENCE_LEN,
+                operation, min, max
+            );
+
+            for i = 1, #sequence, 1 do
+                local value = sequence[i];
+
+                assert.is.truthy(value >= min and value <= max);
+            end
+        end
+    end)
+
+    it("Should exclude the max value from the generation range if closed is absent or false", function()
+        local seed = 11;
+        local options = vector.of(nil, false);
+
+        for _, p in ipairs(RANGE_CLOSENESS_TEST_PAIRS) do
+            for o = 1, #options, 1 do
+                local min, max = p[1], p[2];
+
+                local sequence = generate_sequence(
+                    seed, SEQUENCE_LEN,
+                    operation, min, max, options[o]
+                );
+
+                for i = 1, #sequence, 1 do
+                    local value = sequence[i];
+
+                    assert.is.truthy(
+                        value < max,
+                        ("min: %f, max: %f, value: %f"):format(min, max, value)
+                    );
+                end
+            end
+        end
+    end)
+
+    it("Should include the max value in the generation range if closed is true", function()
+        local seed = 12;
+
+        for _, p in ipairs(RANGE_CLOSENESS_TEST_PAIRS) do
+            local min, max = p[1], p[2];
+
+            local sequence = generate_sequence(
+                seed, SEQUENCE_LEN,
+                operation, min, max, true
+            );
+            local seen_max = false;
+
+            for i = 1, #sequence, 1 do
+                if sequence[i] == max then
+                    seen_max = true;
+                end
+            end
+
+            assert.is.truthy(seen_max, ("min: %f, max: %f"):format(min, max));
+        end
+    end)
+end)
+
 describe("Random.boolean", function()
     local BOOLEAN_SOURCE_SEED = 12;
     local TESTS_SEEDS = generate_seeds(BOOLEAN_SOURCE_SEED, 10);
@@ -93,7 +309,7 @@ describe("Random.boolean", function()
     end)
 
     it("Should raise an error if the probability is greater than 1.0", function()
-        local probability = 1.0 + EPSILON;
+        local probability = 1.0 + ONES_ULP;
 
         for seed in ipairs(TESTS_SEEDS) do
             local generator = random.new(seed);
@@ -105,7 +321,7 @@ describe("Random.boolean", function()
     end)
 
     it("Should raise an error if the probability is less than 0.0", function()
-        local probability = -EPSILON;
+        local probability = -ZEROS_ULP;
 
         for seed in ipairs(TESTS_SEEDS) do
             local generator = random.new(seed);
@@ -113,102 +329,6 @@ describe("Random.boolean", function()
             assert.has_errors(function()
                 generator:boolean(probability);
             end)
-        end
-    end)
-end)
-
-describe("Random.integer", function()
-    local SEQUENCE_LEN = 266;
-
-    local TEST_PAIRS = {
-        { 0,           1 },
-        { -1,          0 },
-        { -1,          1 },
-        { 0,           MAX_INTEGER },
-        { MIN_INTEGER, MAX_INTEGER },
-        { MIN_INTEGER, MAX_INTEGER },
-    };
-
-    ---
-    ---@param generator Random
-    ---@param min integer
-    ---@param max integer
-    ---@param closed boolean
-    ---@return integer
-    local function operation(generator, min, max, closed)
-        return generator:integer(min, max, closed);
-    end
-
-    it("Should raise an error if min > max", function()
-        local generator = random.new(0);
-
-        for _, p in ipairs(TEST_PAIRS) do
-            local min, max = p[2], p[1];
-
-            assert.has_errors(function()
-                generator:integer(min, max, false);
-            end);
-            assert.has_errors(function()
-                generator:integer(min, max, true);
-            end);
-        end
-    end)
-
-    it("Should always generate values within the [min, max] interval", function()
-        local seed = 10;
-
-        for _, p in ipairs(TEST_PAIRS) do
-            local min, max = p[1], p[2];
-            local sequence = generate_sequence(seed, SEQUENCE_LEN, operation, min, max);
-
-            for i = 1, #sequence, 1 do
-                local value = sequence[i];
-
-                assert.is.truthy(value >= min and value <= max);
-            end
-        end
-    end)
-
-    it("Should exclude the max value from the generation range if closed is absent or false", function()
-        local seed = 11;
-        local test_pairs = {
-            { 0,           1 }, { -1, 0 }, { -1, 1 },
-            { MIN_INTEGER, MIN_INTEGER + 1 }, { MAX_INTEGER - 1, MAX_INTEGER }
-        };
-
-        for _, p in ipairs(test_pairs) do
-            local min, max = p[1], p[2];
-
-            local sequence = generate_sequence(seed, SEQUENCE_LEN, operation, min, max);
-
-            for i = 1, #sequence, 1 do
-                local value = sequence[i];
-
-                assert.is.truthy(value < max);
-            end
-        end
-    end)
-
-    it("Should include the max value in the generation range if closed is true", function()
-        local seed = 12;
-        local test_pairs = {
-            { 0,           1 }, { -1, 0 }, { -1, 1 },
-            { MIN_INTEGER, MIN_INTEGER + 1 }, { MAX_INTEGER - 1, MAX_INTEGER }
-        };
-
-        for _, p in ipairs(test_pairs) do
-            local min, max = p[1], p[2];
-
-            local sequence = generate_sequence(seed, SEQUENCE_LEN, operation, min, max, true);
-            local seen_max = false;
-
-            for i = 1, #sequence, 1 do
-                if sequence[i] == max then
-                    seen_max = true;
-                end
-            end
-
-            assert.is.truthy(seen_max);
         end
     end)
 end)
