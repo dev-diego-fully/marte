@@ -67,7 +67,7 @@ impl Random {
         let mut seed = [0u8; 32];
 
         for (i, &s) in [a, b, c, d].iter().enumerate() {
-            let (first, last) = (i, i + 8);
+            let (first, last) = (i * 8, (i + 1) * 8);
             seed[first..last].copy_from_slice(&s.to_be_bytes());
         }
 

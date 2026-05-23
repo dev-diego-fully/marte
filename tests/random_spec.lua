@@ -2,9 +2,7 @@
 
 local random = require("marte.random");
 local vector = require("marte.vector");
-
-local generate_seeds, generate_sequence, generate_sequences;
-local assert_sequences_are_differents;
+local utils = require("random_utils");
 
 local ZEROS_ULP = 2 ^ -1074;
 local ONES_ULP = 2 ^ -52;
@@ -12,6 +10,17 @@ local MIN_INTEGER = math.mininteger or -(2 ^ 53);
 local MAX_INTEGER = math.maxinteger or (2 ^ 53);
 local MIN_FLOAT = -(2.0 ^ 53);
 local MAX_FLOAT = (2.0 ^ 53);
+
+local get_seed = (function()
+    local seeds = utils.generate_seeds(0, 10);
+    local current = 0;
+
+    return function()
+        current = current + 1;
+
+        return seeds[current];
+    end
+end)();
 
 describe("random.new", function()
     local prob = 0.5;
@@ -82,16 +91,6 @@ describe("Random.integer", function()
         { MAX_INTEGER - 1, MAX_INTEGER },
     };
 
-    ---
-    ---@param generator Random
-    ---@param min integer
-    ---@param max integer
-    ---@param closed boolean
-    ---@return integer
-    local function operation(generator, min, max, closed)
-        return generator:integer(min, max, closed);
-    end
-
     it("Should raise an error if min > max", function()
         local generator = random.new(0);
 
@@ -108,13 +107,13 @@ describe("Random.integer", function()
     end)
 
     it("Should always generate values within the [min, max] interval", function()
-        local seed = 10;
+        local seed = get_seed();
 
         for _, p in ipairs(INTERVAL_TEST_PAIRS) do
             local min, max = p[1], p[2];
-            local sequence = generate_sequence(
+            local sequence = utils.generate_sequence.integer(
                 seed, SEQUENCE_LEN,
-                operation, min, max
+                min, max, true
             );
 
             for i = 1, #sequence, 1 do
@@ -126,14 +125,14 @@ describe("Random.integer", function()
     end)
 
     it("Should exclude the max value from the generation range if closed is absent or false", function()
-        local seed = 11;
+        local seed = get_seed();
 
         for _, p in ipairs(RANGE_CLOSENESS_TEST_PAIRS) do
             local min, max = p[1], p[2];
 
-            local sequence = generate_sequence(
+            local sequence = utils.generate_sequence.integer(
                 seed, SEQUENCE_LEN,
-                operation, min, max, false
+                min, max, false
             );
 
             for i = 1, #sequence, 1 do
@@ -145,14 +144,14 @@ describe("Random.integer", function()
     end)
 
     it("Should include the max value in the generation range if closed is true", function()
-        local seed = 12;
+        local seed = get_seed();
 
         for _, p in ipairs(RANGE_CLOSENESS_TEST_PAIRS) do
             local min, max = p[1], p[2];
 
-            local sequence = generate_sequence(
+            local sequence = utils.generate_sequence.integer(
                 seed, SEQUENCE_LEN,
-                operation, min, max, true
+                min, max, true
             );
             local seen_max = false;
 
@@ -160,10 +159,6 @@ describe("Random.integer", function()
                 if sequence[i] == max then
                     seen_max = true;
                 end
-            end
-
-            if not seen_max then
-                print(min, max);
             end
 
             assert.is.truthy(seen_max);
@@ -188,16 +183,6 @@ describe("Random.number", function()
         { MIN_FLOAT, MIN_FLOAT + 1 }, { MAX_FLOAT - 1, MAX_FLOAT }
     };
 
-    ---
-    ---@param generator Random
-    ---@param min number
-    ---@param max number
-    ---@param closed boolean
-    ---@return number
-    local function operation(generator, min, max, closed)
-        return generator:number(min, max, closed);
-    end
-
     it("Should raise an error if min > max", function()
         local generator = random.new(0);
 
@@ -214,13 +199,13 @@ describe("Random.number", function()
     end)
 
     it("Should always generate values within the [min, max] interval", function()
-        local seed = 10;
+        local seed = get_seed();
 
         for _, p in ipairs(INTERVAL_TEST_PAIRS) do
             local min, max = p[1], p[2];
-            local sequence = generate_sequence(
+            local sequence = utils.generate_sequence.number(
                 seed, SEQUENCE_LEN,
-                operation, min, max
+                min, max, true
             );
 
             for i = 1, #sequence, 1 do
@@ -232,16 +217,16 @@ describe("Random.number", function()
     end)
 
     it("Should exclude the max value from the generation range if closed is absent or false", function()
-        local seed = 11;
+        local seed = get_seed();
         local options = vector.of(nil, false);
 
         for _, p in ipairs(RANGE_CLOSENESS_TEST_PAIRS) do
             for o = 1, #options, 1 do
                 local min, max = p[1], p[2];
 
-                local sequence = generate_sequence(
+                local sequence = utils.generate_sequence.number(
                     seed, SEQUENCE_LEN,
-                    operation, min, max, options[o]
+                    min, max, options[o]
                 );
 
                 for i = 1, #sequence, 1 do
@@ -257,14 +242,14 @@ describe("Random.number", function()
     end)
 
     it("Should include the max value in the generation range if closed is true", function()
-        local seed = 12;
+        local seed = get_seed();
 
         for _, p in ipairs(RANGE_CLOSENESS_TEST_PAIRS) do
             local min, max = p[1], p[2];
 
-            local sequence = generate_sequence(
+            local sequence = utils.generate_sequence.number(
                 seed, SEQUENCE_LEN,
-                operation, min, max, true
+                min, max, true
             );
             local seen_max = false;
 
@@ -280,102 +265,169 @@ describe("Random.number", function()
 end)
 
 describe("Random.boolean", function()
-    local BOOLEAN_SOURCE_SEED = 12;
-    local TESTS_SEEDS = generate_seeds(BOOLEAN_SOURCE_SEED, 10);
     local SEQUENCES_LEN = 266;
 
-    ---
-    ---@param gen Random
-    ---@param probability number
-    ---@return boolean
-    local function operation(gen, probability)
-        return gen:boolean(probability);
-    end
-
     it("Should always return false if the provided probability is 0.0", function()
+        local seed = get_seed();
         local probability = 0.0;
 
-        for _, seed in ipairs(TESTS_SEEDS) do
-            local sequence = generate_sequence(
-                seed, SEQUENCES_LEN, operation, probability
-            );
+        local sequence = utils.generate_sequence.boolean(
+            seed, SEQUENCES_LEN, probability
+        );
 
-            for i = 1, #sequence, 1 do
-                local value = sequence[i];
+        for i = 1, #sequence, 1 do
+            local value = sequence[i];
 
-                assert.is.falsy(value);
-            end
+            assert.is.falsy(value);
         end
     end)
 
     it("Should raise an error if the probability is greater than 1.0", function()
+        local seed = get_seed();
+
         local probability = 1.0 + ONES_ULP;
 
-        for seed in ipairs(TESTS_SEEDS) do
-            local generator = random.new(seed);
+        local generator = random.new(seed);
 
-            assert.has_errors(function()
-                generator:boolean(probability);
-            end)
-        end
+        assert.has_errors(function()
+            generator:boolean(probability);
+        end)
     end)
 
     it("Should raise an error if the probability is less than 0.0", function()
+        local seed = get_seed();
         local probability = -ZEROS_ULP;
 
-        for seed in ipairs(TESTS_SEEDS) do
-            local generator = random.new(seed);
+        local generator = random.new(seed);
 
-            assert.has_errors(function()
-                generator:boolean(probability);
-            end)
-        end
+        assert.has_errors(function()
+            generator:boolean(probability);
+        end)
     end)
 end)
 
-local MIN_SEED, MAX_SEED;
-if math.maxinteger then
-    MIN_SEED, MAX_SEED = -2 ^ 62, 2 ^ 62;
-else
-    MIN_SEED, MAX_SEED = -2 ^ 30, 2 ^ 30;
-end
+describe("Deterministic nature", function()
+    local SEQUENCE_LEN = 266;
 
----
----@param source_seed integer
----@param count integer
----@return integer[]
-function generate_seeds(source_seed, count)
-    local seeds = {};
-    local seens_seed = {};
+    describe("Two instances with equal seeds and the same generated value count:", function()
+        it("Should return the same sequence when using the integer method", function()
+            local seeds = utils.generate_seeds(10, 10);
+            local min, max, closed = 0, 1, true;
 
-    math.randomseed(source_seed);
+            for _, seed in ipairs(seeds) do
+                local seq_1 = utils.generate_sequence.integer(
+                    seed, SEQUENCE_LEN, min, max, closed
+                );
+                local seq_2 = utils.generate_sequence.integer(
+                    seed, SEQUENCE_LEN, min, max, closed
+                );
 
-    while #seeds < count do
-        local candidate = math.random(MIN_SEED, MAX_SEED);
-        if seens_seed[candidate] == nil then
-            seens_seed[candidate] = true;
-            table.insert(seeds, candidate);
-        end
-    end
+                assert.are.equals(seq_1, seq_2);
+            end
+        end)
 
-    return seeds;
-end
+        it("Should return the same sequence when using the number method", function()
+            local seeds = utils.generate_seeds(20, 10);
+            local min, max, closed = 0, ZEROS_ULP, true;
 
----
----@generic T
----@param seed integer
----@param len integer
----@param operation fun(r: Random, ...): T
----@return Vector<T>
-function generate_sequence(seed, len, operation, ...)
-    local generator = random.new(seed);
-    local sequence = vector.new();
+            for _, seed in ipairs(seeds) do
+                local seq_1 = utils.generate_sequence.number(
+                    seed, SEQUENCE_LEN, min, max, closed
+                );
+                local seq_2 = utils.generate_sequence.number(
+                    seed, SEQUENCE_LEN, min, max, closed
+                );
 
-    for _ = 1, len, 1 do
-        local value = operation(generator, ...);
+                assert.are.equals(seq_1, seq_2);
+            end
+        end)
 
-        sequence:push(value);
-    end
+        it("Should return the same sequence when using the boolean method", function()
+            local seeds = utils.generate_seeds(20, 10);
+            local prob = 0.5;
 
-    return sequence;
-end
+            for _, seed in ipairs(seeds) do
+                local seq_1 = utils.generate_sequence.boolean(
+                    seed, SEQUENCE_LEN, prob
+                );
+                local seq_2 = utils.generate_sequence.boolean(
+                    seed, SEQUENCE_LEN, prob
+                );
+
+                assert.are.equals(seq_1, seq_2);
+            end
+        end)
+    end)
+
+    describe("Two instances with different seeds and the same generated value count:", function()
+        it("Should return a different sequence when using the integer method", function()
+            local seeds = utils.generate_seeds(10, 10);
+            local min, max, closed = 0, 1, true;
+
+            for i = 1, #seeds - 1, 1 do
+                local seed_1 = seeds[i];
+
+                for j = i + 1, #seeds, 1 do
+                    local seed_2 = seeds[j];
+
+                    local seq_1 = utils.generate_sequence.integer(
+                        seed_1, SEQUENCE_LEN,
+                        min, max, closed
+                    );
+                    local seq_2 = utils.generate_sequence.integer(
+                        seed_2, SEQUENCE_LEN,
+                        min, max, closed
+                    );
+
+                    assert.are.not_equals(seq_1, seq_2);
+                end
+            end
+        end)
+
+        it("Should return a different sequence when using the number method", function()
+            local seeds = utils.generate_seeds(10, 10);
+            local min, max, closed = 0, ZEROS_ULP, true;
+
+            for i = 1, #seeds - 1, 1 do
+                local seed_1 = seeds[i];
+
+                for j = i + 1, #seeds, 1 do
+                    local seed_2 = seeds[j];
+
+                    local seq_1 = utils.generate_sequence.number(
+                        seed_1, SEQUENCE_LEN,
+                        min, max, closed
+                    );
+                    local seq_2 = utils.generate_sequence.number(
+                        seed_2, SEQUENCE_LEN,
+                        min, max, closed
+                    );
+
+                    assert.are.not_equals(seq_1, seq_2);
+                end
+            end
+        end)
+
+        it("Should return a different sequence when using the boolean method", function()
+            local seeds = utils.generate_seeds(10, 10);
+            local prob = 0.5;
+
+            for i = 1, #seeds - 1, 1 do
+                local seed_1 = seeds[i];
+
+                for j = i + 1, #seeds, 1 do
+                    local seed_2 = seeds[j];
+
+                    local seq_1 = utils.generate_sequence.boolean(
+                        seed_1, SEQUENCE_LEN, prob
+                    );
+                    local seq_2 = utils.generate_sequence.boolean(
+                        seed_2, SEQUENCE_LEN, prob
+                    );
+
+                    assert.are.not_equals(seq_1, seq_2);
+                end
+            end
+        end)
+    end)
+end)
