@@ -2,7 +2,7 @@
 
 local vector = require("marte.vector")
 
-describe("copy", function()
+describe("Vector.copy", function()
     local original_vec, returned_vec, backup_vec;
 
     before_each(function()
@@ -33,7 +33,7 @@ describe("copy", function()
     end)
 end)
 
-describe("reverse", function()
+describe("Vector.reverse", function()
     it("Returns the original vector provided as an argument.", function()
         local original_vec = vector.of(1, 2, 3, 4, 5, 6);
         local reversed_vec = original_vec:reverse();
@@ -65,8 +65,8 @@ describe("reverse", function()
     end)
 end)
 
-describe("transform", function()
-    it("Returns the original vector provided as an argument.", function()
+describe("Vector.transform", function()
+    it("Returns the original vector provided as an argument", function()
         local original_vec = vector.of(1, 2, 3, 4, 5, 6);
         local returned_vec = original_vec:transform(function(v) return v end);
 
@@ -100,7 +100,7 @@ describe("transform", function()
     end)
 end)
 
-describe("keep", function()
+describe("Vector.keep", function()
     it("Returns the original vector passed as an argument", function()
         local original_vec = vector.of(1, 2, 3, 4, 5);
         local returned_vec = original_vec:keep(function(v, _) return v % 2 == 0 end);
@@ -164,7 +164,7 @@ describe("keep", function()
     end)
 end)
 
-describe("foldl", function()
+describe("Vector.foldl", function()
     it("Reduces the entire vector to a single value using the reduction function", function()
         local base_vec = vector.of(1, 2, 3);
         local expected_value = 6;
@@ -241,7 +241,7 @@ describe("foldl", function()
     end)
 end)
 
-describe("foldr", function()
+describe("Vector.foldr", function()
     it("Reduces the entire vector to a single value using the reduction function", function()
         local base_vec = vector.of(1, 2, 3);
         local expected_value = 6;
@@ -318,7 +318,7 @@ describe("foldr", function()
     end)
 end)
 
-describe("sort", function()
+describe("Vector.sort", function()
     it("Returns the original vector", function()
         local base_vec = vector.of(3, 1);
         local result_vec = base_vec:sort();
@@ -351,7 +351,7 @@ describe("sort", function()
         )
     end)
 
-    it("Use the comparison function if it is provided.", function()
+    it("Use the comparison function if it is provided", function()
         local base_vec = vector.of(1, 2, 3, 4, 5, 6);
         local expected_vec = vector.of(6, 5, 4, 3, 2, 1);
         base_vec:sort(function(a, b) return a > b end);
@@ -363,7 +363,7 @@ describe("sort", function()
     end)
 end)
 
-describe("for_each", function()
+describe("Vector.for_each", function()
     it("Executes the iteration function for each element of the vector", function()
         local base_vec = vector.of(1, 2, 3, 4, 5);
         local count = 0;

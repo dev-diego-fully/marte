@@ -70,20 +70,18 @@ impl LuaVectorFacade {
         _: &Lua,
         this: &Self,
         (other,): (LuaValue,),
-    ) -> LuaResult<LuaValue> {
-        let lua_false = LuaValue::Boolean(false);
-
+    ) -> LuaResult<bool> {
         let result_ud = match other {
             LuaValue::UserData(ud) => ud.borrow::<LuaVectorFacade>(),
-            _ => return Ok(lua_false),
+            _ => return Ok(false),
         };
 
         match result_ud {
             Ok(ref_vec) => {
                 let is_same = this.vec.is_same(&ref_vec.vec);
-                Ok(LuaValue::Boolean(is_same))
+                Ok(is_same)
             }
-            Err(_) => Ok(lua_false),
+            Err(_) => Ok(false),
         }
     }
 
@@ -95,32 +93,28 @@ impl LuaVectorFacade {
         _: &Lua,
         this: &mut Self,
         (index, new_value): (LuaInteger, LuaValue),
-    ) -> LuaResult<LuaValue> {
+    ) -> LuaResult<bool> {
         let rust_index = Self::translate_index(index)?;
 
         let succeed = this.vec.set(rust_index, new_value);
 
-        Ok(LuaValue::Boolean(succeed))
+        Ok(succeed)
     }
 
     /// The Lua-facing `push` method.
     ///
     /// Appends a new value to the end of the vector and returns `true` on success.
-    pub(crate) fn push(_: &Lua, this: &mut Self, (value,): (LuaValue,)) -> LuaResult<LuaValue> {
-        Ok(LuaValue::Boolean(this.vec.push(value)))
+    pub(crate) fn push(_: &Lua, this: &mut Self, (value,): (LuaValue,)) -> LuaResult<bool> {
+        Ok(this.vec.push(value))
     }
 
     /// The Lua-facing `pop` method.
     ///
     /// It removes and returns the last element, along with a presence flag.
-    pub(in crate::vector) fn pop(
-        _: &Lua,
-        this: &mut Self,
-        _: (),
-    ) -> LuaResult<(LuaValue, LuaValue)> {
+    pub(in crate::vector) fn pop(_: &Lua, this: &mut Self, _: ()) -> LuaResult<(bool, LuaValue)> {
         match this.vec.pop() {
-            Some(value) => Ok((LuaValue::Boolean(true), value)),
-            None => Ok((LuaValue::Boolean(false), LuaNil)),
+            Some(value) => Ok((true, value)),
+            None => Ok((false, LuaNil)),
         }
     }
 
@@ -156,20 +150,18 @@ impl LuaVectorFacade {
         _: &Lua,
         this: &Self,
         (other,): (LuaValue,),
-    ) -> LuaResult<LuaValue> {
-        let lua_false = LuaValue::Boolean(false);
-
+    ) -> LuaResult<bool> {
         let result_ud = match other {
             LuaValue::UserData(ud) => ud.borrow::<LuaVectorFacade>(),
-            _ => return Ok(lua_false),
+            _ => return Ok(false),
         };
 
         match result_ud {
             Ok(ref_vec) => {
                 let equals = this.vec == ref_vec.vec;
-                Ok(LuaValue::Boolean(equals))
+                Ok(equals)
             }
-            Err(_) => Ok(lua_false),
+            Err(_) => Ok(false),
         }
     }
 

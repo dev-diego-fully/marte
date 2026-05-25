@@ -165,6 +165,30 @@ impl LuaVectorFacade {
             ))),
         }
     }
+
+    pub(in crate::vector) fn all(
+        _: &Lua,
+        this: &Self,
+        (predicate,): (LuaFunction,),
+    ) -> LuaResult<bool> {
+        let trad_predicate = |value: LuaValue, index| {
+            let lua_index = to_lua_index(index);
+            let args = (value, lua_index);
+
+            match predicate.call(args) {
+                Ok(result) => Ok(result),
+                Err(_) => Err(lua_index),
+            }
+        };
+
+        match this.vec.all(trad_predicate) {
+            Ok(result) => Ok(result),
+            Err(index) => Err(LuaError::runtime(format!(
+                "Failed to check all. Error encountered at the {}th element",
+                index
+            ))),
+        }
+    }
 }
 
 fn to_lua_index(rust_index: usize) -> LuaInteger {

@@ -4,7 +4,7 @@ local regex = require("marte.regex");
 local vector = require("marte.vector");
 local assert_match_layout;
 
-describe("new", function()
+describe("regex.new", function()
     it("Should return the regex and nil if a valid pattern is provided", function()
         local pattern = "\\d+";
         local rgx, err = regex.new(pattern);
@@ -81,7 +81,7 @@ describe(
     end
 )
 
-describe("test", function()
+describe("Regex.test", function()
     local test_regex;
 
     before_each(function()
@@ -103,7 +103,7 @@ describe("test", function()
     end)
 end)
 
-describe("find_first", function()
+describe("Regex.find_first", function()
     it("Should return only the first occurrence of the pattern in the string when present", function()
         local test_regex = regex.new("[a-zA-Z]+");
         local test_string = "Monkeys eat bananas";
@@ -157,7 +157,7 @@ describe("find_first", function()
     end)
 end)
 
-describe("collect_all", function()
+describe("Regex.collect_all", function()
     describe("When no occurrences are found in the string:", function()
         local test_string = "Just a string without digits";
         local test_regex = regex.new("\\d+");
@@ -277,7 +277,7 @@ describe("collect_all", function()
     end)
 end)
 
-describe("process_all", function()
+describe("Regex.process_all", function()
     it("Should execute the provided operation for each occurrence of the pattern found in the string", function()
         local test_regex = regex.new("\\d");
         local test_string = "0123456789";
@@ -407,7 +407,7 @@ describe("process_all", function()
     end)
 end)
 
-describe("replace_all", function()
+describe("Regex.replace_all", function()
     local test_regex = regex.new("[a-zA-Z]+");
     local replacement = "[word]";
 
@@ -453,7 +453,7 @@ describe("replace_all", function()
     end)
 end)
 
-describe("split_all", function()
+describe("Regex.split_all", function()
     local test_regex;
 
     before_each(function()

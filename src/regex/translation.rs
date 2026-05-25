@@ -44,14 +44,10 @@ impl LuaRegexFacade {
         }
     }
 
-    pub(in crate::regex) fn test(
-        _: &Lua,
-        this: &Self,
-        (string,): (LuaString,),
-    ) -> LuaResult<LuaValue> {
+    pub(in crate::regex) fn test(_: &Lua, this: &Self, (string,): (LuaString,)) -> LuaResult<bool> {
         let matched = this.inner.test(&string.as_bytes());
 
-        Ok(LuaValue::Boolean(matched))
+        Ok(matched)
     }
 
     pub(in crate::regex) fn find_first(
@@ -235,27 +231,23 @@ impl LuaMatchFacade {
         Err(LuaError::runtime("Match objects are immutable"))
     }
 
-    pub(in crate::regex) fn equals(
-        _: &Lua,
-        this: &Self,
-        other: LuaAnyUserData,
-    ) -> LuaResult<LuaValue> {
+    pub(in crate::regex) fn equals(_: &Lua, this: &Self, other: LuaAnyUserData) -> LuaResult<bool> {
         let mtc = match other.borrow::<LuaMatchFacade>() {
             Ok(udr) => udr,
-            Err(_) => return Ok(LuaValue::Boolean(false)),
+            Err(_) => return Ok(false),
         };
         let equality = this.enumarateds == mtc.enumarateds;
 
-        Ok(LuaValue::Boolean(equality))
+        Ok(equality)
     }
 
-    pub(in crate::regex) fn len(_: &Lua, this: &Self, _: ()) -> LuaResult<usize> {
+    pub(in crate::regex) fn len(_: &Lua, this: &Self, _: ()) -> LuaResult<LuaInteger> {
         let len = this.enumarateds.len();
 
         if len == 0 {
             return Err(LuaError::runtime("Invalid empty Match object"));
         }
 
-        Ok(this.enumarateds.len() - 1)
+        Ok((this.enumarateds.len() - 1) as LuaInteger)
     }
 }
