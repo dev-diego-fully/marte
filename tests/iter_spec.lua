@@ -413,3 +413,64 @@ describe("Vector.for_each", function()
         );
     end)
 end)
+
+describe("Vector.all", function()
+    it("Should not modify the original Vector", function()
+        local vec = vector.of(0, 1, 2, 3, 4);
+        local original = vector.of(0, 1, 2, 3, 4);
+
+        vec:all(function() return true end);
+
+        assert.are.equals(vec, original);
+    end)
+
+    it("Should return true if the predicate function always returns true", function()
+        local vec = vector.of(1, 2, 3, 4, 5);
+
+        local result = vec:all(function() return true end);
+
+        assert.is.truthy(result);
+    end)
+
+    it("Should return false as soon as the predicate function returns false for the first time", function()
+        local vec = vector.of(0, 1, 2, 3, 4);
+        local expected_count = 3;
+
+        local count = 0;
+        local result = vec:all(function(_, i)
+            count = count + 1;
+
+            return i ~= 3;
+        end);
+
+        assert.is.falsy(result);
+        assert.are.equals(expected_count, count);
+    end)
+
+    it("Should always return true when called on an empty vector", function()
+        local vec = vector.new();
+
+        local result = vec:all(function() return true end);
+
+        assert.is.truthy(result);
+    end)
+
+    it("Should provide Lua indices to the predicate function", function()
+        local base_vec = vector.new(5);
+        local expected_vec = vector.of(1, 2, 3, 4, 5);
+        local found_indexes = vector.new();
+
+        local function predicate(_, index)
+            found_indexes:push(index);
+
+            return true;
+        end
+
+        base_vec:all(predicate);
+
+        assert.are.equals(
+            found_indexes, expected_vec,
+            "Is not correctly providing Lua indices to the predicate function"
+        );
+    end)
+end)

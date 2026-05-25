@@ -103,10 +103,13 @@ end
 function Vector.copy(self)
 end
 
----
+--- Iterates through all elements of the Vector, checking if the predicate
+--- function is satisfied (returns true) for all elements.
+--- The iteration is aborted as soon as the first false value is returned.
 ---@generic T
----@param self Vector
+---@param self Vector<T>
 ---@param predicate fun(value: T, index: integer): boolean
+---@return boolean
 function Vector.all(self, predicate)
 end
 
