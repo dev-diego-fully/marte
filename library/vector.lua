@@ -1,5 +1,6 @@
----@diagnostic disable: missing-return
+---@meta marte.vector
 
+---@class vector
 local vector = {};
 
 ---A Lua object that provides a dynamic array with common vector operations.
@@ -189,11 +190,12 @@ end
 --- element b.
 ---@generic T
 ---@param self Vector<T>
----@param comparer fun(a: T, b: T): boolean
+---@param comparer? fun(a: T, b: T): boolean
 ---@return Vector<T>
 function Vector.sort(self, comparer)
 end
 
-vector = require("marte.vector.core")
+---@type vector
+local core = require("_marte.vector");
 
-return vector
+return core;

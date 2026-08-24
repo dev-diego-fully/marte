@@ -8,7 +8,7 @@ use super::translation::vector::LuaVectorFacade;
 /// a table containing the module's public interface, which in this case is
 /// the `Vector.new` constructor.
 #[mlua::lua_module]
-fn marte_vector(lua: &Lua) -> LuaResult<LuaTable> {
+fn _marte_vector(lua: &Lua) -> LuaResult<LuaTable> {
     let module = lua.create_table()?;
 
     module.set("new", lua.create_function(LuaVectorFacade::lua_new)?)?;

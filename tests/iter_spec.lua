@@ -1,6 +1,6 @@
 ---@diagnostic disable: undefined-field
 
-local vector = require("marte.vector")
+local vector = require("marte.vector");
 
 describe("Vector.copy", function()
     local original_vec, returned_vec, backup_vec;
@@ -380,6 +380,7 @@ describe("Vector.for_each", function()
         local base_vec = vector.of(2, 3, 4, 5, 7);
         local expected_vec = vector.of(2, 3, 4, 5, 7);
 
+        ---@diagnostic disable-next-line: redundant-return-value
         base_vec:for_each(function(v, i) return v + i end)
 
         assert.are.equals(

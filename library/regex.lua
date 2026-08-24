@@ -1,5 +1,6 @@
----@diagnostic disable: missing-return
+---@meta marte.regex
 
+---@class regex
 local regex = {};
 
 ---A compiled regular expression object, providing methods to manipulate
@@ -38,7 +39,7 @@ end
 ---Otherwise, returns nil.
 ---@param self Regex
 ---@param str string
----@return Match
+---@return Match | nil
 function Regex.find_first(self, str)
 end
 
@@ -94,4 +95,7 @@ end
 function Regex.split_all(self, str, limit)
 end
 
-return regex;
+---@type regex
+local core = require("_marte.regex");
+
+return core;

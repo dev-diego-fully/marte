@@ -1,4 +1,4 @@
----@diagnostic disable: undefined-field
+---@diagnostic disable: undefined-field, need-check-nil, param-type-mismatch
 
 local regex = require("marte.regex");
 local vector = require("marte.vector");

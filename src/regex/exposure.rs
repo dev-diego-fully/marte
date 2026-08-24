@@ -2,7 +2,7 @@ use super::translation::{LuaMatchFacade, LuaRegexFacade};
 use mlua::prelude::*;
 
 #[mlua::lua_module]
-fn marte_regex(lua: &Lua) -> LuaResult<LuaTable> {
+fn _marte_regex(lua: &Lua) -> LuaResult<LuaTable> {
     let regex_module = lua.create_table()?;
 
     regex_module.set("new", lua.create_function(LuaRegexFacade::new)?)?;

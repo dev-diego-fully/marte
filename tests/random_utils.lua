@@ -112,7 +112,7 @@ function GENERATOR_OPERATION.boolean(gen, probability)
 end
 
 if math.maxinteger then
-    MIN_SEED, MAX_SEED = -2 ^ 62, 2 ^ 62;
+    MIN_SEED, MAX_SEED = -2 ^ 61, 2 ^ 61;
 else
     MIN_SEED, MAX_SEED = -2 ^ 30, 2 ^ 30;
 end

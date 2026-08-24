@@ -2,7 +2,7 @@
 
 local random = require("marte.random");
 local vector = require("marte.vector");
-local utils = require("random_utils");
+local utils = require("marte._testsutils.random");
 
 local ZEROS_ULP = 2 ^ -1074;
 local ONES_ULP = 2 ^ -52;

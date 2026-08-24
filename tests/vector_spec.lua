@@ -1,6 +1,6 @@
 ---@diagnostic disable: undefined-field
 
-local vector = require("marte.vector")
+local vector = require("marte.vector");
 
 describe("Uses one-based indexing", function()
     describe("Should consider the first index as 1", function()

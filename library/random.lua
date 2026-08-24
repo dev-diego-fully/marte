@@ -1,5 +1,6 @@
----@diagnostic disable: missing-return
+---@meta marte.random
 
+---@class random
 local random = {};
 
 --- Creates an instance of a PRNG using the provided integers as a seed.
@@ -51,6 +52,7 @@ end
 function Random.boolean(self, probability)
 end
 
-random = require("mars.random.core");
+---@type random
+local core = require("_marte.random");
 
-return random;
+return core;

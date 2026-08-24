@@ -3,7 +3,7 @@ use mlua::prelude::*;
 use super::LuaRandomFacade;
 
 #[mlua::lua_module]
-fn marte_random(lua: &Lua) -> LuaResult<LuaTable> {
+fn _marte_random(lua: &Lua) -> LuaResult<LuaTable> {
     let module = lua.create_table()?;
 
     module.set("new", lua.create_function(LuaRandomFacade::new)?)?;
