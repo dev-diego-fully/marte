@@ -25,3 +25,4 @@ target
 
 /target
 /tests/marte.so
+*.src.rock

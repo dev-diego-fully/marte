@@ -1,6 +1,6 @@
 [package]
 name = "marte"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 
 [lib]
@@ -8,8 +8,8 @@ crate-type = ["cdylib"]
 
 [dependencies]
 mlua = { version = "0.11", features = ["module"] }
-rand = "0.10.1"
-regex = "1.12.3"
+rand = "0.10.4"
+regex = "1.13.2"
 
 [features]
 default = ["lua51"]

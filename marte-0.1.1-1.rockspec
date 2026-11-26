@@ -1,10 +1,10 @@
 rockspec_format = "3.0"
 package = "marte"
-version = "0.1.0-1"
+version = "0.1.1-1"
 
 source = {
    url = "git+ssh://git@github.com/dev-diego-fully/marte.git",
-   tag = "v0.1.0"
+   tag = "v0.1.1"
 }
 
 description = {
